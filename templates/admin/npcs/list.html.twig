@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}NPCs List - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>📜 NPC Management</h2>
+    <button class="btn" onclick="alert('Create functionality will be added in the Vue app')">+ Create New NPC</button>
+</div>
+
+{% if npcs is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">No NPCs found. Create your first NPC to get started!</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Dialog Nodes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for npc in npcs %}
+            <tr>
+                <td>{{ npc.id }}</td>
+                <td><strong>{{ npc.name }}</strong></td>
+                <td>{{ npc.description|default('—')|slice(0, 50) }}{% if npc.description|length > 50 %}...{% endif %}</td>
+                <td>{{ npc.dialogNodes|length }}</td>
+                <td>
+                    <a href="{{ path('admin_npcs_edit', {id: npc.id}) }}" class="btn" style="padding: 6px 12px; font-size: 14px;">
+                        Edit Dialog Tree
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}

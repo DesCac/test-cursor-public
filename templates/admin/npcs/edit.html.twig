@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ npc.name }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 20px;">
+    <a href="{{ path('admin_npcs_list') }}" style="color: #667eea; text-decoration: none;">← Back to NPCs</a>
+</div>
+
+<h2>Edit NPC: {{ npc.name }}</h2>
+<p style="color: #666; margin: 10px 0;">{{ npc.description }}</p>
+
+<div id="dialog-editor" style="margin-top: 30px;">
+    <!-- Vue app will be mounted here -->
+</div>
+
+<script>
+    window.npcData = {
+        id: {{ npc.id }},
+        name: "{{ npc.name|escape('js') }}",
+        description: "{{ npc.description|default('')|escape('js') }}",
+    };
+</script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('build/npc-editor.js') }}" defer></script>
+{% endblock %}

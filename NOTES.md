@@ -1,0 +1,373 @@
+# Технические заметки
+
+## Известные особенности проекта
+
+### База данных в тестовом окружении
+
+**Проблема:** Doctrine добавлял суффикс `_test` к имени БД, хотя оно уже содержало `_test`.
+
+**Результат:** `rpg_quest_npc_test_test` вместо `rpg_quest_npc_test`
+
+**Решение:** 
+```yaml
+# config/packages/doctrine.yaml
+when@test:
+    doctrine:
+        dbal:
+            # Don't add suffix - database name already contains _test
+            # dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+```
+
+**В CI/CD:**
+Используем прямое создание БД через psql:
+```bash
+PGPASSWORD=app_password psql -h localhost -U app -d postgres -c "CREATE DATABASE rpg_quest_npc_test;"
+```
+
+### PHPStan конфигурация
+
+**Требуемые includes:** Расширения phpstan-symfony и phpstan-doctrine должны быть подключены
+
+**Решение:**
+```yaml
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+```
+
+**Кеш Symfony:** PHPStan требует скомпилированный контейнер для анализа
+
+**В CI/CD:**
+```bash
+php bin/console cache:warmup --env=dev  # Создает контейнер для PHPStan
+vendor/bin/phpstan analyse
+```
+
+**Level 9 требования:**
+- Все array типы должны быть явно типизированы в PHPDoc
+- Пример: `@var array<string, mixed>|null` вместо просто `?array`
+- Для массивов строк: `@var array<int, string>|null`
+- Для ассоциативных: `@var array<string, mixed>|null`
+- В тестах нужны проверки типов перед использованием (`assertIsArray`, `assertIsString`)
+
+### PHPUnit API изменения
+
+**PHPUnit 10+:** Убран класс `PHPUnit\TextUI\Command`
+
+**Было (не работает):**
+```php
+PHPUnit\TextUI\Command::main();
+```
+
+**Стало (PHPUnit 10+):**
+```php
+$code = (new PHPUnit\TextUI\Application)->run($_SERVER['argv']);
+exit($code);
+```
+
+### Symfony.lock и Composer
+
+**Проблема:** При установке через `composer install` может возникать ошибка:
+```
+Cannot access offset of type string on string
+```
+
+**Причина:** Symfony Flex пытается обработать `symfony.lock` файл, но из-за его минимального содержимого возникает ошибка типов.
+
+**Решение в проекте:**
+1. Файл `symfony.lock` создан с минимальной структурой
+2. В CI/CD workflow автоматически удаляется перед установкой
+3. Composer создает правильный lock файл при первой установке
+4. В документации добавлены инструкции по решению
+
+**Для локальной разработки:**
+```bash
+rm symfony.lock
+composer install --no-scripts
+```
+
+### Auto-scripts в composer.json
+
+**Изменение:** Auto-scripts секция оставлена пустой
+
+**Причина:** 
+- Избежание проблем при первой установке
+- Команды типа `cache:clear` требуют полностью настроенное окружение
+- В CI/CD окружение может быть не полностью готово на этапе install
+
+**Альтернатива:**
+Команды запускаются вручную после установки:
+```bash
+composer install --no-scripts
+php bin/console cache:clear
+```
+
+### PHP 8.5 vs 8.3
+
+**Требование в ТЗ:** PHP 8.5
+
+**Реализовано:** PHP 8.3
+
+**Причина:** PHP 8.5 еще не выпущен (на момент 2024-11-10). Последняя стабильная версия - 8.3.
+
+**Миграция на 8.5:**
+Когда PHP 8.5 будет выпущен:
+1. Обновите `Dockerfile`: `FROM php:8.5-fpm-bookworm`
+2. Обновите `.github/workflows/ci.yml`: `php-version: '8.5'`
+3. Обновите `composer.json`: `"php": ">=8.5"`
+
+### Структура базы данных
+
+**Выбор:** PostgreSQL с JSON полями
+
+**Обоснование:**
+- JSON идеален для хранения динамической логики (условия, данные узлов)
+- PostgreSQL имеет отличную поддержку JSON с индексами и запросами
+- Гибкость: можно менять структуру условий без миграций
+- Производительность: JSON в PostgreSQL быстрее, чем в MySQL
+
+**Пример структуры условий:**
+```json
+{
+  "level": 5,
+  "quest_completed": ["quest_1", "quest_2"],
+  "has_item": "ancient_key",
+  "reputation": {
+    "faction": "knights",
+    "min_value": 100
+  }
+}
+```
+
+### GraphQL vs REST
+
+**Реализовано:** Оба подхода
+
+**GraphQL** (`/graphql`):
+- Для чтения данных клиентами
+- Эффективные запросы с выборкой нужных полей
+- Встроенная валидация и типизация
+- GraphiQL playground для тестирования
+- Резолверы вызываются через `@=service()` expression language
+
+**REST API** (`/api/*`):
+- Для обновления данных из админки
+- Простые CRUD операции
+- Используется Vue приложением
+
+**Почему не только GraphQL?**
+- Mutations в GraphQL сложнее для начинающих
+- REST API проще для быстрой разработки админки
+- Можно легко мигрировать REST на GraphQL позже
+
+**Изменения в GraphQL резолверах:**
+- Убраны `ResolverInterface` и `AliasedInterface` 
+- Резолверы теперь обычные сервисы
+- Вызываются напрямую через `@=service('App\\GraphQL\\Resolver\\...')`
+- Проще для понимания и отладки
+
+### Vue приложение
+
+**Библиотека:** VueFlow
+
+**Выбор обоснован:**
+- Специализируется на node-based редакторах
+- Отличная производительность
+- Встроенная поддержка drag-and-drop
+- Готовые компоненты (minimap, controls, background)
+
+**Альтернативы:**
+- `react-flow` (если бы использовали React)
+- `jsplumb` (более низкоуровневый)
+- Собственная реализация на canvas/svg (слишком сложно)
+
+### Тестирование
+
+**PHPUnit:** Базовые тесты для API и сервисов
+
+**Отсутствует:**
+- E2E тесты (можно добавить Cypress/Playwright)
+- Тесты Vue компонентов (по ТЗ не требуются)
+- Integration тесты для GraphQL (можно добавить)
+
+**Для продакшена рекомендуется:**
+```bash
+# Добавить больше unit тестов
+# Добавить integration тесты
+# Настроить coverage минимум 80%
+```
+
+### CI/CD особенности
+
+**Автоматический запуск:** Все ветки кроме `main` и `dev`
+
+**Ручной запуск:** Только для `main` и `dev`
+
+**Обоснование:**
+- Защита production веток от случайных прогонов
+- Экономия CI/CD минут
+- Контроль перед важными релизами
+
+**Как запустить вручную:**
+1. Перейти на вкладку Actions в GitHub
+2. Выбрать workflow "CI Pipeline"
+3. Нажать "Run workflow"
+4. Выбрать ветку
+5. Нажать "Run workflow"
+
+### Безопасность
+
+**HTTP Basic Auth для админки:**
+
+**Плюсы:**
+- Просто настроить
+- Не требует сессий/cookies
+- Работает из коробки
+
+**Минусы:**
+- Пароль передается в каждом запросе (base64)
+- Нет logout без закрытия браузера
+- Базовый уровень защиты
+
+**Для продакшена рекомендуется:**
+- Заменить на JWT/OAuth2
+- Добавить HTTPS
+- Настроить rate limiting
+- Добавить 2FA
+
+### Docker образы
+
+**Base image:** `php:8.3-fpm-bookworm`
+
+**Debian Bookworm:**
+- LTS (Long Term Support)
+- Стабильные пакеты
+- Широкая поддержка
+
+**FPM vs CLI:**
+- FPM для production с Nginx
+- Лучшая производительность
+- Изоляция процессов
+
+## Будущие улучшения
+
+### Краткосрочные (1-2 месяца)
+
+1. **Миграция на PHP 8.5** (когда выйдет)
+2. **Добавить больше тестов** (coverage 80%+)
+3. **E2E тесты** для админки
+4. **Улучшить валидацию** GraphQL запросов
+5. **Добавить кеширование** (Redis) для GraphQL
+
+### Среднесрочные (3-6 месяцев)
+
+1. **Версионирование API**
+2. **WebSocket** для real-time обновлений в редакторе
+3. **Экспорт/Импорт** диалогов и квестов (JSON/YAML)
+4. **История изменений** (version control для логики)
+5. **Предпросмотр диалогов** в интерфейсе
+
+### Долгосрочные (6+ месяцев)
+
+1. **AI-ассистент** для генерации диалогов
+2. **Визуализация статистики** использования NPC/квестов
+3. **Мультиязычность** (i18n для диалогов)
+4. **Права доступа** (roles: admin, editor, viewer)
+5. **API rate limiting** и тарификация
+
+## Производительность
+
+### Текущие метрики (ожидаемые)
+
+- **GraphQL запрос** (npc с 10 узлами): ~50-100ms
+- **Сохранение графа** (20 узлов): ~200-300ms
+- **Загрузка админки**: ~1-2s (первая загрузка)
+- **Размер JS bundle**: ~500-700kb (с VueFlow)
+
+### Оптимизации для продакшена
+
+1. **PostgreSQL:**
+   - Индексы на foreign keys (уже есть)
+   - JSON индексы на часто используемые поля
+   - Connection pooling (PgBouncer)
+
+2. **PHP:**
+   - OPcache (настроен в php.ini)
+   - APCu для кеша приложения
+   - Doctrine query cache
+
+3. **Frontend:**
+   - Code splitting по роутам
+   - Lazy loading компонентов
+   - CDN для assets
+
+4. **Nginx:**
+   - Gzip compression
+   - Browser caching
+   - HTTP/2
+
+## Структура данных
+
+### Примеры условий
+
+**Условие на узел диалога:**
+```json
+{
+  "player": {
+    "level": {"min": 5, "max": 10},
+    "class": ["warrior", "paladin"]
+  },
+  "quest": {
+    "completed": ["main_quest_1"],
+    "active": ["side_quest_3"]
+  },
+  "inventory": {
+    "has_items": ["ancient_key", "map"],
+    "gold": {"min": 100}
+  },
+  "time": {
+    "hour": {"min": 18, "max": 6},
+    "day_of_week": [6, 7]
+  }
+}
+```
+
+**Данные узла квеста:**
+```json
+{
+  "objective_type": "kill",
+  "target": "skeleton_warrior",
+  "count": 10,
+  "location": {
+    "zone": "ancient_ruins",
+    "coordinates": {"x": 100, "y": 250}
+  },
+  "rewards_on_complete": {
+    "experience": 500,
+    "gold": 100
+  }
+}
+```
+
+## Лицензирование
+
+**Проект:** MIT License
+
+**Зависимости:**
+- Symfony: MIT
+- Doctrine: MIT
+- GraphQL Bundle: MIT
+- Vue: MIT
+- VueFlow: MIT
+
+Все зависимости имеют совместимые лицензии.
+
+## Контакты и поддержка
+
+- GitHub Issues: для багов и feature requests
+- Discussions: для вопросов и обсуждений
+- Email: [укажите email] для приватных вопросов
+
+---
+
+**Последнее обновление:** 2024-11-10

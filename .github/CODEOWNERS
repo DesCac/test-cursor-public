@@ -1,0 +1,24 @@
+# Code owners for automatic PR review requests
+
+# Default owners for everything in the repo
+* @your-username
+
+# Backend
+/src/ @your-username
+/config/ @your-username
+/migrations/ @your-username
+
+# Frontend
+/assets/ @your-username
+/templates/ @your-username
+
+# Infrastructure
+/docker/ @your-username
+/docker-compose.yml @your-username
+/Dockerfile @your-username
+
+# CI/CD
+/.github/ @your-username
+
+# Documentation
+*.md @your-username

@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quests List - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>⚔️ Quest Management</h2>
+    <button class="btn" onclick="alert('Create functionality will be added in the Vue app')">+ Create New Quest</button>
+</div>
+
+{% if quests is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">No quests found. Create your first quest to get started!</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Logic Nodes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quest in quests %}
+            <tr>
+                <td>{{ quest.id }}</td>
+                <td><strong>{{ quest.name }}</strong></td>
+                <td>{{ quest.description|default('—')|slice(0, 50) }}{% if quest.description|length > 50 %}...{% endif %}</td>
+                <td>{{ quest.logicNodes|length }}</td>
+                <td>
+                    <a href="{{ path('admin_quests_edit', {id: quest.id}) }}" class="btn" style="padding: 6px 12px; font-size: 14px;">
+                        Edit Logic
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
