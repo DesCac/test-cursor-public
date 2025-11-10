@@ -91,13 +91,13 @@ jobs:
           php bin/console doctrine:migrations:migrate --no-interaction || php bin/console doctrine:schema:create --env=test
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress || echo "PHPStan failed, but continuing..."
+        run: vendor/bin/phpstan analyse --no-progress
 
       - name: Run PHPUnit tests
         env:
           DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
           APP_ENV: test
-        run: php bin/phpunit || echo "Tests failed"
+        run: php bin/phpunit
 
   lint:
     name: Code Style Check
