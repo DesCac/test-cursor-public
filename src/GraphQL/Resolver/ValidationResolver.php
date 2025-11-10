@@ -3,24 +3,12 @@
 namespace App\GraphQL\Resolver;
 
 use App\Service\DialogValidationService;
-use Overblog\GraphQLBundle\Definition\Resolver\AliasedInterface;
-use Overblog\GraphQLBundle\Definition\Resolver\ResolverInterface;
 
-class ValidationResolver implements ResolverInterface, AliasedInterface
+class ValidationResolver
 {
     public function __construct(
         private readonly DialogValidationService $validationService
     ) {
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public static function getAliases(): array
-    {
-        return [
-            'validateDialogChoice' => 'validate_dialog_choice',
-        ];
     }
 
     /**

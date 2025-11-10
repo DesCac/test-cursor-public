@@ -20,4 +20,3 @@ services:
 
     App\GraphQL\Resolver\:
         resource: '../src/GraphQL/Resolver/'
-        tags: ['overblog_graphql.resolver']

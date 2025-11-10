@@ -2,6 +2,28 @@
 
 ## Известные особенности проекта
 
+### База данных в тестовом окружении
+
+**Проблема:** Doctrine добавлял суффикс `_test` к имени БД, хотя оно уже содержало `_test`.
+
+**Результат:** `rpg_quest_npc_test_test` вместо `rpg_quest_npc_test`
+
+**Решение:** 
+```yaml
+# config/packages/doctrine.yaml
+when@test:
+    doctrine:
+        dbal:
+            # Don't add suffix - database name already contains _test
+            # dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+```
+
+**В CI/CD:**
+Используем прямое создание БД через psql:
+```bash
+PGPASSWORD=app_password psql -h localhost -U app -d postgres -c "CREATE DATABASE rpg_quest_npc_test;"
+```
+
 ### Symfony.lock и Composer
 
 **Проблема:** При установке через `composer install` может возникать ошибка:
@@ -85,6 +107,7 @@ php bin/console cache:clear
 - Эффективные запросы с выборкой нужных полей
 - Встроенная валидация и типизация
 - GraphiQL playground для тестирования
+- Резолверы вызываются через `@=service()` expression language
 
 **REST API** (`/api/*`):
 - Для обновления данных из админки
@@ -95,6 +118,12 @@ php bin/console cache:clear
 - Mutations в GraphQL сложнее для начинающих
 - REST API проще для быстрой разработки админки
 - Можно легко мигрировать REST на GraphQL позже
+
+**Изменения в GraphQL резолверах:**
+- Убраны `ResolverInterface` и `AliasedInterface` 
+- Резолверы теперь обычные сервисы
+- Вызываются напрямую через `@=service('App\\GraphQL\\Resolver\\...')`
+- Проще для понимания и отладки
 
 ### Vue приложение
 

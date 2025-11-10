@@ -78,13 +78,17 @@ jobs:
       - name: Build assets
         run: npm run build || echo "Asset build skipped"
 
-      - name: Setup database
+      - name: Create test database
+        run: |
+          PGPASSWORD=app_password psql -h localhost -U app -d postgres -c "DROP DATABASE IF EXISTS rpg_quest_npc_test;"
+          PGPASSWORD=app_password psql -h localhost -U app -d postgres -c "CREATE DATABASE rpg_quest_npc_test;"
+
+      - name: Setup database schema
         env:
           DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
           APP_ENV: test
         run: |
-          php bin/console doctrine:database:create --if-not-exists || true
-          php bin/console doctrine:migrations:migrate --no-interaction || php bin/console doctrine:schema:create
+          php bin/console doctrine:migrations:migrate --no-interaction || php bin/console doctrine:schema:create --env=test
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress || echo "PHPStan failed, but continuing..."

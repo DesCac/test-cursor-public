@@ -7,19 +7,19 @@ Query:
                 args:
                     id:
                         type: "Int!"
-                resolve: "@=resolver('npc', [args['id']])"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\NPCResolver').resolve(args['id'])"
             npcs:
                 type: "[NPC!]!"
-                resolve: "@=resolver('npcs')"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\NPCResolver').resolveAll()"
             quest:
                 type: "Quest"
                 args:
                     id:
                         type: "Int!"
-                resolve: "@=resolver('quest', [args['id']])"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\QuestResolver').resolve(args['id'])"
             quests:
                 type: "[Quest!]!"
-                resolve: "@=resolver('quests')"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\QuestResolver').resolveAll()"
             validateDialogChoice:
                 type: "ValidationResult!"
                 args:
@@ -29,7 +29,7 @@ Query:
                         type: "Int!"
                     choiceId:
                         type: "Int!"
-                resolve: "@=resolver('validate_dialog_choice', [args['npcId'], args['nodeId'], args['choiceId']])"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\ValidationResolver').validateDialogChoice(args['npcId'], args['nodeId'], args['choiceId'])"
 
 NPC:
     type: object
