@@ -6,9 +6,13 @@ security:
         admin_provider:
             memory:
                 users:
-                    admin:
+                    '%env(ADMIN_USER)%':
+                        # For HTTP Basic Auth with memory provider, use plaintext (only for dev!)
+                        # In production, replace with proper user authentication
                         password: '%env(ADMIN_PASSWORD)%'
                         roles: ['ROLE_ADMIN']
+
+    enable_authenticator_manager: true
 
     firewalls:
         dev:

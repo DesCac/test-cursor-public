@@ -24,6 +24,40 @@ when@test:
 PGPASSWORD=app_password psql -h localhost -U app -d postgres -c "CREATE DATABASE rpg_quest_npc_test;"
 ```
 
+### PHPStan конфигурация
+
+**Требуемые includes:** Расширения phpstan-symfony и phpstan-doctrine должны быть подключены
+
+**Решение:**
+```yaml
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+```
+
+**Кеш Symfony:** PHPStan требует скомпилированный контейнер для анализа
+
+**В CI/CD:**
+```bash
+php bin/console cache:warmup --env=dev  # Создает контейнер для PHPStan
+vendor/bin/phpstan analyse
+```
+
+### PHPUnit API изменения
+
+**PHPUnit 10+:** Убран класс `PHPUnit\TextUI\Command`
+
+**Было (не работает):**
+```php
+PHPUnit\TextUI\Command::main();
+```
+
+**Стало (PHPUnit 10+):**
+```php
+$code = (new PHPUnit\TextUI\Application)->run($_SERVER['argv']);
+exit($code);
+```
+
 ### Symfony.lock и Composer
 
 **Проблема:** При установке через `composer install` может возникать ошибка:

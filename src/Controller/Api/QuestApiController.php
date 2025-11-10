@@ -37,6 +37,10 @@ class QuestApiController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
+        if (!is_array($data)) {
+            return $this->json(['error' => 'Invalid JSON in request body'], Response::HTTP_BAD_REQUEST);
+        }
+
         if (isset($data['name'])) {
             $quest->setName($data['name']);
         }

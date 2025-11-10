@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { VueFlow, useVueFlow } from '@vue-flow/core';
+import { VueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
@@ -62,8 +62,6 @@ import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
-
-const { addNodes, addEdges, removeNodes, removeEdges } = useVueFlow();
 
 const elements = ref([]);
 const selectedNode = ref(null);
@@ -149,7 +147,15 @@ function onConnect(params) {
 
 function deleteNode() {
   if (selectedNode.value) {
-    elements.value = elements.value.filter(el => el.id !== selectedNode.value.id);
+    const nodeId = selectedNode.value.id;
+    // Remove the node and all connected edges
+    elements.value = elements.value.filter(el => {
+      // Remove the node itself
+      if (el.id === nodeId) return false;
+      // Remove edges connected to this node
+      if (el.source === nodeId || el.target === nodeId) return false;
+      return true;
+    });
     selectedNode.value = null;
   }
 }
@@ -159,12 +165,22 @@ async function saveGraph() {
     const nodes = elements.value.filter(el => !el.source);
     const edges = elements.value.filter(el => el.source);
 
+    // Parse and validate conditions JSON
+    const parseConditions = (conditionsStr) => {
+      try {
+        return JSON.parse(conditionsStr || '{}');
+      } catch (e) {
+        console.warn('Invalid JSON in conditions:', conditionsStr);
+        return {};
+      }
+    };
+
     await axios.put(`/api/npcs/${window.npcData.id}/nodes`, {
       nodes: nodes.map(n => ({
         id: n.id,
         type: n.data.nodeType,
         text: n.data.text,
-        conditions: JSON.parse(n.data.conditions || '{}'),
+        conditions: parseConditions(n.data.conditions),
         positionX: n.position.x,
         positionY: n.position.y
       })),
@@ -179,7 +195,7 @@ async function saveGraph() {
     alert('Graph saved successfully!');
   } catch (error) {
     console.error('Failed to save graph:', error);
-    alert('Failed to save graph');
+    alert('Failed to save graph: ' + (error.response?.data?.error || error.message));
   }
 }
 </script>

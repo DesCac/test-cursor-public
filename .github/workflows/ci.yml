@@ -8,10 +8,7 @@ on:
   pull_request:
     branches:
       - '**'
-  workflow_dispatch:
-    branches:
-      - main
-      - dev
+  workflow_dispatch:  # Manual trigger for main and dev branches
 
 jobs:
   tests:
@@ -89,6 +86,14 @@ jobs:
           APP_ENV: test
         run: |
           php bin/console doctrine:migrations:migrate --no-interaction || php bin/console doctrine:schema:create --env=test
+
+      - name: Warm up cache for PHPStan
+        env:
+          DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
+          APP_ENV: dev
+        run: |
+          php bin/console cache:clear --env=dev
+          php bin/console cache:warmup --env=dev
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress
