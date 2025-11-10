@@ -8,7 +8,3 @@ overblog_graphql:
                     type: yaml
                     dir: "%kernel.project_dir%/config/graphql"
                     suffix: ~
-        builders:
-            field:
-                alias:
-                    resolver: 'Overblog\GraphQLBundle\Definition\Builder\MappingInterface::BUILDER_RESOLVE'
