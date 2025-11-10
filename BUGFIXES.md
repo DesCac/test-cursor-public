@@ -80,6 +80,13 @@
 - `tests/Controller/Api/NPCApiControllerTest.php`
 - `tests/Service/DialogValidationServiceTest.php`
 
+### 12. KERNEL_CLASS не установлена для PHPUnit
+**Дата:** 2024-11-10  
+**Проблема:** `You must set the KERNEL_CLASS environment variable`  
+**Решение:** Добавлена переменная в `phpunit.xml.dist`  
+**Файл:** `phpunit.xml.dist`  
+**Добавлено:** `<server name="KERNEL_CLASS" value="App\Kernel" force="true" />`
+
 ## Улучшения качества кода (от Bugbot)
 
 ### 1. Валидация JSON в API контроллерах
