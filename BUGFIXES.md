@@ -54,6 +54,13 @@
 **Решение:** Удален параметр `branches` из `workflow_dispatch`  
 **Файл:** `.github/workflows/ci.yml`
 
+### 9. enable_authenticator_manager устаревшая опция
+**Дата:** 2024-11-10  
+**Проблема:** `Unrecognized option "enable_authenticator_manager" under "security"`  
+**Решение:** Удалена устаревшая опция - она не нужна в Symfony 7.1  
+**Файл:** `config/packages/security.yaml`  
+**Причина:** Опция была для миграции Symfony 5.x → 6.x, в 7.x удалена
+
 ## Улучшения качества кода (от Bugbot)
 
 ### 1. Валидация JSON в API контроллерах

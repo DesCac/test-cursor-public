@@ -12,8 +12,6 @@ security:
                         password: '%env(ADMIN_PASSWORD)%'
                         roles: ['ROLE_ADMIN']
 
-    enable_authenticator_manager: true
-
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
