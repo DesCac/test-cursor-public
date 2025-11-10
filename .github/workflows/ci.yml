@@ -98,6 +98,15 @@ jobs:
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress
 
+      - name: Warm up test cache
+        env:
+          DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
+          APP_ENV: test
+          APP_DEBUG: 1
+        run: |
+          php bin/console cache:clear --env=test
+          php bin/console cache:warmup --env=test
+
       - name: Run PHPUnit tests
         env:
           DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8

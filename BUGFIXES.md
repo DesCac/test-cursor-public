@@ -90,15 +90,15 @@
 ### 13. framework.test не включен для WebTestCase
 **Дата:** 2024-11-10  
 **Проблема:** `You cannot create the client used in functional tests if the "framework.test" config is not set to true`  
-**Решение:** Создан файл конфигурации для test окружения  
-**Файл:** `config/packages/test/framework.yaml`  
-**Добавлено:**
-```yaml
-framework:
-    test: true
-    session:
-        storage_factory_id: session.storage.factory.mock_file
-```
+**Решение:** 
+1. Создан файл конфигурации для test окружения: `config/packages/test/framework.yaml`
+2. Добавлен прогрев кеша для test окружения в CI/CD
+3. Добавлена переменная `APP_DEBUG=1` в phpunit.xml.dist
+
+**Файлы:**
+- `config/packages/test/framework.yaml`
+- `.github/workflows/ci.yml` (warmup test cache)
+- `phpunit.xml.dist` (APP_DEBUG)
 
 ## Улучшения качества кода (от Bugbot)
 
