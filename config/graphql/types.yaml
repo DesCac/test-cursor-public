@@ -1,0 +1,141 @@
+Query:
+    type: object
+    config:
+        fields:
+            npc:
+                type: "NPC"
+                args:
+                    id:
+                        type: "Int!"
+                resolve: "@=resolver('npc', [args['id']])"
+            npcs:
+                type: "[NPC!]!"
+                resolve: "@=resolver('npcs')"
+            quest:
+                type: "Quest"
+                args:
+                    id:
+                        type: "Int!"
+                resolve: "@=resolver('quest', [args['id']])"
+            quests:
+                type: "[Quest!]!"
+                resolve: "@=resolver('quests')"
+            validateDialogChoice:
+                type: "ValidationResult!"
+                args:
+                    npcId:
+                        type: "Int!"
+                    nodeId:
+                        type: "Int!"
+                    choiceId:
+                        type: "Int!"
+                resolve: "@=resolver('validate_dialog_choice', [args['npcId'], args['nodeId'], args['choiceId']])"
+
+NPC:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            name:
+                type: "String!"
+            description:
+                type: "String"
+            dialogNodes:
+                type: "[DialogNode!]!"
+
+Quest:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            name:
+                type: "String!"
+            description:
+                type: "String"
+            objectives:
+                type: "String"
+            rewards:
+                type: "String"
+            requirements:
+                type: "String"
+            logicNodes:
+                type: "[QuestNode!]!"
+
+DialogNode:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            nodeType:
+                type: "String!"
+            text:
+                type: "String"
+            conditions:
+                type: "String"
+            positionX:
+                type: "Float"
+            positionY:
+                type: "Float"
+            connections:
+                type: "[DialogConnection!]!"
+
+DialogConnection:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            sourceNode:
+                type: "DialogNode!"
+            targetNode:
+                type: "DialogNode!"
+            choiceText:
+                type: "String"
+            conditions:
+                type: "String"
+
+QuestNode:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            nodeType:
+                type: "String!"
+            data:
+                type: "String"
+            conditions:
+                type: "String"
+            positionX:
+                type: "Float"
+            positionY:
+                type: "Float"
+            connections:
+                type: "[QuestConnection!]!"
+
+QuestConnection:
+    type: object
+    config:
+        fields:
+            id:
+                type: "Int!"
+            sourceNode:
+                type: "QuestNode!"
+            targetNode:
+                type: "QuestNode!"
+            conditions:
+                type: "String"
+
+ValidationResult:
+    type: object
+    config:
+        fields:
+            valid:
+                type: "Boolean!"
+            message:
+                type: "String"
+            nextNodeId:
+                type: "Int"

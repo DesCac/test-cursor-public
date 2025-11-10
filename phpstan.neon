@@ -1,0 +1,13 @@
+parameters:
+    level: 9
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - src/Kernel.php
+    symfony:
+        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+    ignoreErrors:
+        - '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition::children\(\)#'

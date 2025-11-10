@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ quest.name }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 20px;">
+    <a href="{{ path('admin_quests_list') }}" style="color: #667eea; text-decoration: none;">← Back to Quests</a>
+</div>
+
+<h2>Edit Quest: {{ quest.name }}</h2>
+<p style="color: #666; margin: 10px 0;">{{ quest.description }}</p>
+
+<div id="quest-editor" style="margin-top: 30px;">
+    <!-- Vue app will be mounted here -->
+</div>
+
+<script>
+    window.questData = {
+        id: {{ quest.id }},
+        name: "{{ quest.name|escape('js') }}",
+        description: "{{ quest.description|default('')|escape('js') }}",
+    };
+</script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('build/quest-editor.js') }}" defer></script>
+{% endblock %}

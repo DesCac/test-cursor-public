@@ -1,0 +1,112 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+    branches:
+      - main
+      - dev
+
+jobs:
+  tests:
+    name: Run Tests and Static Analysis
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: rpg_quest_npc_test
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, pgsql
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:schema:create --env=test
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Run PHPUnit tests
+        env:
+          DATABASE_URL: postgresql://app:app_password@localhost:5432/rpg_quest_npc_test?serverVersion=16&charset=utf8
+        run: php bin/phpunit
+
+  lint:
+    name: Code Style Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Check code style
+        run: |
+          echo "Code style checking would go here (PHP-CS-Fixer, etc.)"
+          echo "Skipping for now as it's not configured"
