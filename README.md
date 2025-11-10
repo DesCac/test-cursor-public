@@ -370,6 +370,23 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 ## 🐛 Troubleshooting
 
+### Ошибка при установке Composer (Symfony Flex)
+
+Если при запуске `composer install` возникает ошибка:
+```
+Cannot access offset of type string on string
+```
+
+**Решение:**
+```bash
+# Удалите symfony.lock и попробуйте снова
+rm symfony.lock
+composer install --no-scripts
+composer run-script auto-scripts
+```
+
+Или в CI/CD эта проблема уже решена автоматически в workflow файле.
+
 ### Проблемы с правами доступа
 
 ```bash
@@ -394,8 +411,26 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
+### CI/CD не проходит тесты
+
+Если GitHub Actions падает на этапе установки зависимостей:
+
+1. Проверьте, что в репозитории **НЕ** закоммичен `composer.lock` 
+2. Файл `symfony.lock` автоматически удаляется в workflow
+3. Если проблема продолжается, попробуйте обновить зависимости локально:
+   ```bash
+   rm symfony.lock composer.lock
+   composer update
+   git add composer.lock
+   git commit -m "Update composer.lock"
+   ```
+
 ## 📚 Дополнительная документация
 
+- [INSTALL.md](INSTALL.md) - Подробная инструкция по установке
+- [QUICKSTART.md](QUICKSTART.md) - Быстрый старт
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Как участвовать в разработке
+- [SECURITY.md](SECURITY.md) - Безопасность
 - [Symfony Documentation](https://symfony.com/doc/current/index.html)
 - [GraphQL Bundle](https://github.com/overblog/GraphQLBundle)
 - [VueFlow](https://vueflow.dev/)

@@ -130,6 +130,18 @@ Dashboard (/)
 
 ## 🐛 Проблемы?
 
+### Ошибка при composer install
+
+Если видите ошибку `Cannot access offset of type string on string`:
+
+```bash
+# Решение
+rm symfony.lock
+make install
+```
+
+### Другие проблемы
+
 ```bash
 # Перезапустите все
 make down && make up && make install
@@ -140,6 +152,8 @@ make logs
 # Проверьте статус контейнеров
 docker-compose ps
 ```
+
+Подробнее в [INSTALL.md](INSTALL.md) и [README.md](README.md)
 
 ## 📚 Документация
 
