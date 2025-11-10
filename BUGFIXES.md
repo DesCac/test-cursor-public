@@ -87,6 +87,19 @@
 **Файл:** `phpunit.xml.dist`  
 **Добавлено:** `<server name="KERNEL_CLASS" value="App\Kernel" force="true" />`
 
+### 13. framework.test не включен для WebTestCase
+**Дата:** 2024-11-10  
+**Проблема:** `You cannot create the client used in functional tests if the "framework.test" config is not set to true`  
+**Решение:** Создан файл конфигурации для test окружения  
+**Файл:** `config/packages/test/framework.yaml`  
+**Добавлено:**
+```yaml
+framework:
+    test: true
+    session:
+        storage_factory_id: session.storage.factory.mock_file
+```
+
 ## Улучшения качества кода (от Bugbot)
 
 ### 1. Валидация JSON в API контроллерах
