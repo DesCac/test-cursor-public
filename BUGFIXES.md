@@ -100,6 +100,13 @@
 - `.github/workflows/ci.yml` (warmup test cache)
 - `phpunit.xml.dist` (APP_DEBUG)
 
+### 14. Отсутствие тестовых данных для PHPUnit
+**Дата:** 2024-11-10  
+**Проблема:** `{"error":"NPC not found"}` - тест падает, так как в тестовой БД нет данных  
+**Решение:** Добавлена загрузка фикстур перед запуском тестов в CI/CD  
+**Файл:** `.github/workflows/ci.yml`  
+**Команда:** `php bin/console doctrine:fixtures:load --no-interaction --env=test`
+
 ## Улучшения качества кода (от Bugbot)
 
 ### 1. Валидация JSON в API контроллерах

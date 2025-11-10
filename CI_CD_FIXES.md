@@ -127,6 +127,15 @@ $this->assertIsArray($data);
 2. Добавлен warmup test cache в CI
 3. Добавлен `APP_DEBUG=1` в phpunit.xml.dist
 
+### 14. Отсутствие тестовых данных
+**Ошибка:** `HTTP/1.1 404 Not Found {"error":"NPC not found"}`  
+**Файл:** `.github/workflows/ci.yml`  
+**Решение:** Добавлена загрузка фикстур перед тестами:
+```yaml
+- name: Load fixtures for tests
+  run: php bin/console doctrine:fixtures:load --no-interaction --env=test
+```
+
 ## 💡 Улучшения от Bugbot
 
 ### 1. JSON валидация в API
