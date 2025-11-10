@@ -24,6 +24,7 @@ class DialogConnection
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
     private ?string $choiceText = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $conditions = null;
 
@@ -65,11 +66,17 @@ class DialogConnection
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getConditions(): ?array
     {
         return $this->conditions;
     }
 
+    /**
+     * @param array<string, mixed>|null $conditions
+     */
     public function setConditions(?array $conditions): self
     {
         $this->conditions = $conditions;

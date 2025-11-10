@@ -25,6 +25,7 @@ class DialogNode
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $text = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $conditions = null;
 
@@ -86,11 +87,17 @@ class DialogNode
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getConditions(): ?array
     {
         return $this->conditions;
     }
 
+    /**
+     * @param array<string, mixed>|null $conditions
+     */
     public function setConditions(?array $conditions): self
     {
         $this->conditions = $conditions;

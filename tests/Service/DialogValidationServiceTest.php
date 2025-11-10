@@ -19,6 +19,7 @@ class DialogValidationServiceTest extends TestCase
         $result = $service->validateChoice(999, 1, 1);
 
         $this->assertFalse($result['valid']);
+        $this->assertIsString($result['message']);
         $this->assertStringContainsString('NPC not found', $result['message']);
     }
 

@@ -22,9 +22,11 @@ class QuestNode
     #[ORM\Column(type: 'string', length: 50)]
     private string $nodeType; // 'start', 'objective', 'condition', 'reward', 'end'
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $data = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $conditions = null;
 
@@ -75,22 +77,34 @@ class QuestNode
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getData(): ?array
     {
         return $this->data;
     }
 
+    /**
+     * @param array<string, mixed>|null $data
+     */
     public function setData(?array $data): self
     {
         $this->data = $data;
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getConditions(): ?array
     {
         return $this->conditions;
     }
 
+    /**
+     * @param array<string, mixed>|null $conditions
+     */
     public function setConditions(?array $conditions): self
     {
         $this->conditions = $conditions;

@@ -21,12 +21,15 @@ class Quest
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    /** @var array<int, string>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $objectives = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $rewards = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $requirements = null;
 
@@ -76,11 +79,17 @@ class Quest
         return $this;
     }
 
+    /**
+     * @return array<int, string>|null
+     */
     public function getObjectives(): ?array
     {
         return $this->objectives;
     }
 
+    /**
+     * @param array<int, string>|null $objectives
+     */
     public function setObjectives(?array $objectives): self
     {
         $this->objectives = $objectives;
@@ -88,11 +97,17 @@ class Quest
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getRewards(): ?array
     {
         return $this->rewards;
     }
 
+    /**
+     * @param array<string, mixed>|null $rewards
+     */
     public function setRewards(?array $rewards): self
     {
         $this->rewards = $rewards;
@@ -100,11 +115,17 @@ class Quest
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getRequirements(): ?array
     {
         return $this->requirements;
     }
 
+    /**
+     * @param array<string, mixed>|null $requirements
+     */
     public function setRequirements(?array $requirements): self
     {
         $this->requirements = $requirements;

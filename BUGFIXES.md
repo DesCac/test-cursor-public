@@ -61,6 +61,25 @@
 **Файл:** `config/packages/security.yaml`  
 **Причина:** Опция была для миграции Symfony 5.x → 6.x, в 7.x удалена
 
+### 10. PHPStan level 9 - отсутствие типов для array свойств
+**Дата:** 2024-11-10  
+**Проблема:** `Property has no value type specified in iterable type array`  
+**Решение:** Добавлены PHPDoc аннотации со строгими типами для всех array свойств  
+**Файлы:**
+- `src/Entity/DialogNode.php` - `@var array<string, mixed>|null`
+- `src/Entity/DialogConnection.php` - `@var array<string, mixed>|null`
+- `src/Entity/Quest.php` - `@var array<int, string>|null` для objectives, `@var array<string, mixed>|null` для rewards/requirements
+- `src/Entity/QuestNode.php` - `@var array<string, mixed>|null`
+- `src/Entity/QuestConnection.php` - `@var array<string, mixed>|null`
+
+### 11. PHPStan level 9 - проблемы в тестах
+**Дата:** 2024-11-10  
+**Проблема:** Отсутствие проверок типов перед использованием значений  
+**Решение:** Добавлены `assertIsString()` и `assertIsArray()` перед использованием  
+**Файлы:**
+- `tests/Controller/Api/NPCApiControllerTest.php`
+- `tests/Service/DialogValidationServiceTest.php`
+
 ## Улучшения качества кода (от Bugbot)
 
 ### 1. Валидация JSON в API контроллерах

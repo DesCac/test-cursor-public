@@ -21,6 +21,7 @@ class QuestConnection
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?QuestNode $targetNode = null;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $conditions = null;
 
@@ -51,11 +52,17 @@ class QuestConnection
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getConditions(): ?array
     {
         return $this->conditions;
     }
 
+    /**
+     * @param array<string, mixed>|null $conditions
+     */
     public function setConditions(?array $conditions): self
     {
         $this->conditions = $conditions;

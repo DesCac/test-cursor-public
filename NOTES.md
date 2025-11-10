@@ -43,6 +43,13 @@ php bin/console cache:warmup --env=dev  # Создает контейнер дл
 vendor/bin/phpstan analyse
 ```
 
+**Level 9 требования:**
+- Все array типы должны быть явно типизированы в PHPDoc
+- Пример: `@var array<string, mixed>|null` вместо просто `?array`
+- Для массивов строк: `@var array<int, string>|null`
+- Для ассоциативных: `@var array<string, mixed>|null`
+- В тестах нужны проверки типов перед использованием (`assertIsArray`, `assertIsString`)
+
 ### PHPUnit API изменения
 
 **PHPUnit 10+:** Убран класс `PHPUnit\TextUI\Command`
