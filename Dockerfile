@@ -19,21 +19,25 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+ENV COMPOSER_HOME=/var/www/.composer \
+    NPM_CONFIG_CACHE=/var/www/.npm-cache
+
+RUN mkdir -p "$COMPOSER_HOME" "$NPM_CONFIG_CACHE"
+
 # Set working directory
 WORKDIR /var/www/html
 
 # Copy application files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies required for the baked image (actual dev install runs via make)
 RUN composer install --no-interaction --optimize-autoloader --no-dev || true
 
-# Install Node dependencies and build assets
-RUN npm install && npm run build || true
+# Ensure caches belong to the runtime user
+RUN chown -R www-data:www-data /var/www
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+RUN chmod -R 755 /var/www/html
 
 USER www-data
 

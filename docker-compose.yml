@@ -3,7 +3,6 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: rpg_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: rpg_quest_npc
@@ -20,7 +19,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: rpg_php
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
@@ -35,7 +33,6 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: rpg_nginx
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -49,7 +46,6 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
 
 networks:
   rpg_network:

@@ -57,10 +57,9 @@ docker-compose exec php php bin/console doctrine:fixtures:load --no-interaction
    composer install
    ```
    
-   Если возникает ошибка с symfony.lock:
+   Если возникла ошибка `Cannot access offset of type string on string`, выполните:
    ```bash
-   rm symfony.lock
-   composer install --no-scripts
+   composer install --no-interaction
    ```
 
 2. **Настроить окружение:**
@@ -127,9 +126,11 @@ docker-compose exec php php bin/console doctrine:fixtures:load --no-interaction
 
 **Решение:**
 ```bash
-rm symfony.lock
-composer install --no-scripts
+docker-compose exec php composer install --no-interaction
 ```
+
+Лок-файлы уже находятся в репозитории, поэтому удалять `symfony.lock` больше не
+нужно. Просто убедитесь, что рабочее дерево чистое, и повторите `make install`.
 
 ### База данных не создается
 

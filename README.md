@@ -372,20 +372,15 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 ### Ошибка при установке Composer (Symfony Flex)
 
-Если при запуске `composer install` возникает ошибка:
+Если при запуске `composer install` появляется сообщение
+`Cannot access offset of type string on string`, просто повторите установку:
 ```
-Cannot access offset of type string on string
-```
-
-**Решение:**
-```bash
-# Удалите symfony.lock и попробуйте снова
-rm symfony.lock
-composer install --no-scripts
-composer run-script auto-scripts
+docker-compose exec php composer install --no-interaction
 ```
 
-Или в CI/CD эта проблема уже решена автоматически в workflow файле.
+Актуальные `composer.lock` и `symfony.lock` уже находятся в репозитории, поэтому
+удалять их больше не требуется — достаточно убедиться, что рабочее дерево чистое,
+и запустить `make install` ещё раз.
 
 ### Проблемы с правами доступа
 
@@ -417,14 +412,13 @@ npm install
 
 Если GitHub Actions падает на этапе установки зависимостей:
 
-1. Проверьте, что в репозитории **НЕ** закоммичен `composer.lock` 
-2. Файл `symfony.lock` автоматически удаляется в workflow
-3. Если проблема продолжается, попробуйте обновить зависимости локально:
+1. Убедитесь, что запущен `composer install --no-interaction` (без удаления lock-файлов)
+2. Проверьте, что `composer.lock` и `symfony.lock` обновлены и закоммичены
+3. Если проблема продолжается, обновите зависимости локально и закоммитьте новые lock-файлы:
    ```bash
-   rm symfony.lock composer.lock
-   composer update
-   git add composer.lock
-   git commit -m "Update composer.lock"
+   docker-compose exec php composer update
+   git add composer.lock symfony.lock
+   git commit -m "Update Composer dependencies"
    ```
 
 **Проблема с GraphQL:**

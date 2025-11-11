@@ -135,10 +135,12 @@ Dashboard (/)
 Если видите ошибку `Cannot access offset of type string on string`:
 
 ```bash
-# Решение
-rm symfony.lock
+# Повторите установку зависимостей
 make install
 ```
+
+Файлы `composer.lock` и `symfony.lock` уже синхронизированы с проектом, поэтому
+ничего удалять вручную не требуется.
 
 ### Другие проблемы
 

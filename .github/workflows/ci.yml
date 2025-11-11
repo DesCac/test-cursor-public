@@ -55,9 +55,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Remove symfony.lock to allow fresh install
-        run: rm -f symfony.lock
-
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
 
@@ -133,9 +130,6 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, xml, ctype, iconv
           coverage: none
-
-      - name: Remove symfony.lock
-        run: rm -f symfony.lock
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts

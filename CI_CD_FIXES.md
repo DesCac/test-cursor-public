@@ -16,9 +16,8 @@
 **Ошибка:** `Cannot access offset of type string on string`  
 **Файл:** `symfony.lock`  
 **Решение:**
-- Удаление `symfony.lock` перед `composer install` в CI
-- Установка с флагом `--no-scripts`
-- Отдельный запуск `auto-scripts`
+- Зафиксирован актуальный `symfony.lock` в репозитории
+- Composer запускается в CI без удаления lock-файлов (`composer install --no-interaction`)
 
 ### 2. GraphQL - функция resolver не существует  
 **Ошибка:** `The function "resolver" does not exist`  
