@@ -5,7 +5,7 @@
 ### 1. Symfony.lock конфликт с Composer
 **Дата:** 2024-11-10  
 **Проблема:** `Cannot access offset of type string on string`  
-**Решение:** Автоматическое удаление `symfony.lock` перед установкой в CI  
+**Решение:** Зафиксирован актуальный `symfony.lock`; Composer запускается без удаления lock-файлов  
 **Файл:** `.github/workflows/ci.yml`
 
 ### 2. GraphQL resolver функция не найдена
