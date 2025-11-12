@@ -18,6 +18,9 @@
           <button type="button" class="flow-toolbar__btn" @click="fitToView">
             ◉ Fit
           </button>
+          <button type="button" class="flow-toolbar__btn" @click="beautifyLayout">
+            ✨ Beautify
+          </button>
           <button type="button" class="flow-toolbar__btn" @click="resetPosition">
             ↺ Reset
           </button>
@@ -49,20 +52,15 @@
           v-model:edges="edges"
           :node-types="nodeTypes"
           :default-edge-options="defaultEdgeOptions"
-          :min-zoom="0.1"
-          :max-zoom="4"
-          :fit-view-on-init="true"
-          :nodes-draggable="true"
-          :zoom-on-scroll="true"
-          :zoom-on-pinch="true"
-          :pan-on-scroll="false"
+          :min-zoom="0.2"
+          :max-zoom="2"
           @pane-click="clearSelection"
           @node-click="handleNodeClick"
           @edge-click="handleEdgeClick"
           @connect="handleConnect"
           @pane-ready="handlePaneReady"
         >
-          <Background pattern-color="#cbd5e0" :gap="16" />
+          <Background pattern-color="#bfc4ff" :gap="24" />
           <Controls position="top-left" />
           <MiniMap pannable zoomable />
       </VueFlow>
@@ -112,6 +110,11 @@ import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import axios from 'axios';
 
+import '@vue-flow/core/dist/style.css';
+import '@vue-flow/core/dist/theme-default.css';
+import '@vue-flow/controls/dist/style.css';
+import '@vue-flow/minimap/dist/style.css';
+
 import Palette from './flow/Palette.vue';
 import PropertiesPanel from './flow/PropertiesPanel.vue';
 import LogicNode from './flow/LogicNode.vue';
@@ -127,11 +130,7 @@ const nodeTypes = {
 
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  animated: false,
-  style: {
-    stroke: '#667eea',
-    strokeWidth: 2,
-  },
+  markerEnd: 'arrowclosed',
 };
 
 const NODE_META = {
@@ -526,6 +525,96 @@ function resetPosition() {
   }
 }
 
+function beautifyLayout() {
+  if (nodes.value.length === 0) return;
+
+  // Создаём граф зависимостей
+  const nodeMap = new Map(nodes.value.map(n => [n.id, { ...n, level: -1, index: 0 }]));
+  const incomingCount = new Map(nodes.value.map(n => [n.id, 0]));
+  const outgoingMap = new Map();
+
+  // Подсчитываем входящие связи
+  edges.value.forEach(edge => {
+    incomingCount.set(edge.target, (incomingCount.get(edge.target) || 0) + 1);
+    if (!outgoingMap.has(edge.source)) {
+      outgoingMap.set(edge.source, []);
+    }
+    outgoingMap.get(edge.source).push(edge.target);
+  });
+
+  // Находим корневые узлы (без входящих связей)
+  const rootNodes = Array.from(nodeMap.keys()).filter(id => incomingCount.get(id) === 0);
+  
+  // Если нет корневых узлов, берём первый узел или узел типа 'start'
+  if (rootNodes.length === 0) {
+    const startNode = nodes.value.find(n => n.data?.nodeType === 'start');
+    rootNodes.push(startNode ? startNode.id : nodes.value[0].id);
+  }
+
+  // Распределяем узлы по уровням (BFS)
+  const levels = [];
+  const visited = new Set();
+  const queue = rootNodes.map(id => ({ id, level: 0 }));
+
+  while (queue.length > 0) {
+    const { id, level } = queue.shift();
+    if (visited.has(id)) continue;
+    
+    visited.add(id);
+    const node = nodeMap.get(id);
+    if (node) {
+      node.level = level;
+      if (!levels[level]) levels[level] = [];
+      levels[level].push(node);
+    }
+
+    const children = outgoingMap.get(id) || [];
+    children.forEach(childId => {
+      if (!visited.has(childId)) {
+        queue.push({ id: childId, level: level + 1 });
+      }
+    });
+  }
+
+  // Добавляем неподключённые узлы в конец
+  const unvisited = nodes.value.filter(n => !visited.has(n.id));
+  if (unvisited.length > 0) {
+    const lastLevel = levels.length;
+    levels[lastLevel] = unvisited.map(n => ({ ...n, level: lastLevel }));
+  }
+
+  // Параметры расстановки
+  const nodeWidth = 220;
+  const nodeHeight = 110;
+  const horizontalGap = 150; // Расстояние между узлами по горизонтали
+  const verticalGap = 200;   // Расстояние между уровнями (больше для лейблов)
+  const startX = 200;
+  const startY = 150;
+
+  // Располагаем узлы
+  levels.forEach((levelNodes, levelIndex) => {
+    const levelWidth = levelNodes.length * (nodeWidth + horizontalGap) - horizontalGap;
+    const offsetX = startX - levelWidth / 2;
+    
+    levelNodes.forEach((node, index) => {
+      const x = offsetX + index * (nodeWidth + horizontalGap) + levelWidth / 2;
+      const y = startY + levelIndex * (nodeHeight + verticalGap);
+      
+      const originalNode = nodes.value.find(n => n.id === node.id);
+      if (originalNode) {
+        originalNode.position = { x, y };
+      }
+    });
+  });
+
+  // Применяем изменения и подгоняем вид
+  nodes.value = [...nodes.value];
+  setTimeout(() => {
+    fitToView();
+    notify('success', 'Граф упорядочен');
+  }, 100);
+}
+
 function handlePaneReady() {
   nextTickFitView();
 }
@@ -584,13 +673,12 @@ function generateEdgeId() {
 }
 </script>
 
-<style>
+<style scoped>
 .flow-shell {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 0;
-  height: calc(100vh - 180px);
-  min-height: 600px;
+  height: 680px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(102, 126, 234, 0.25);
@@ -777,5 +865,31 @@ function generateEdgeId() {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Стили для лейблов на связях */
+:deep(.vue-flow__edge-text) {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:deep(.vue-flow__edge-textbg) {
+  fill: rgba(255, 255, 255, 0.95);
+}
+
+:deep(.vue-flow__edge-label) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 255, 0.95));
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(45, 65, 132, 0.25), 
+              0 2px 8px rgba(102, 126, 234, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  font-size: 12px;
+  font-weight: 600;
+  color: #404b8c;
+  backdrop-filter: blur(10px);
+  outline: 1px solid rgba(102, 126, 234, 0.15);
+  outline-offset: 2px;
 }
 </style>
