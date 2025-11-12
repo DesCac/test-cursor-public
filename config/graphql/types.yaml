@@ -56,10 +56,13 @@ Quest:
                 type: "String"
             objectives:
                 type: "String"
+                resolve: "@=value.getObjectives() ? json_encode(value.getObjectives()) : null"
             rewards:
                 type: "String"
+                resolve: "@=value.getRewards() ? json_encode(value.getRewards()) : null"
             requirements:
                 type: "String"
+                resolve: "@=value.getRequirements() ? json_encode(value.getRequirements()) : null"
             logicNodes:
                 type: "[QuestNode!]!"
 
@@ -75,12 +78,14 @@ DialogNode:
                 type: "String"
             conditions:
                 type: "String"
+                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
             positionX:
                 type: "Float"
             positionY:
                 type: "Float"
             connections:
                 type: "[DialogConnection!]!"
+                resolve: "@=value.getOutgoingConnections()"
 
 DialogConnection:
     type: object
@@ -96,6 +101,7 @@ DialogConnection:
                 type: "String"
             conditions:
                 type: "String"
+                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
 
 QuestNode:
     type: object
@@ -107,14 +113,17 @@ QuestNode:
                 type: "String!"
             data:
                 type: "String"
+                resolve: "@=value.getData() ? json_encode(value.getData()) : null"
             conditions:
                 type: "String"
+                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
             positionX:
                 type: "Float"
             positionY:
                 type: "Float"
             connections:
                 type: "[QuestConnection!]!"
+                resolve: "@=value.getOutgoingConnections()"
 
 QuestConnection:
     type: object
@@ -128,6 +137,7 @@ QuestConnection:
                 type: "QuestNode!"
             conditions:
                 type: "String"
+                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
 
 ValidationResult:
     type: object
