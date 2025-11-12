@@ -63,6 +63,11 @@ const NODE_LABELS = {
   condition: 'Условие',
   objective: 'Цель',
   reward: 'Награда',
+  skill: 'Скилл',
+  core: 'Базовый',
+  specialized: 'Специализация',
+  advanced: 'Продвинутый',
+  ultimate: 'Ультимативный',
 };
 
 const typeLabel = computed(() => NODE_LABELS[props.data.nodeType] || 'Узел');
@@ -240,6 +245,40 @@ const handleClass = computed(() => [
   border-color: rgba(239, 68, 68, 0.4);
 }
 
+.logic-node--skill .logic-node__header,
+.logic-node--core .logic-node__header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+}
+
+.logic-node--skill,
+.logic-node--core {
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.logic-node--specialized .logic-node__header {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(234, 88, 12, 0.12));
+}
+
+.logic-node--specialized {
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.logic-node--advanced .logic-node__header {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.16), rgba(219, 39, 119, 0.12));
+}
+
+.logic-node--advanced {
+  border-color: rgba(236, 72, 153, 0.38);
+}
+
+.logic-node--ultimate .logic-node__header {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.12));
+}
+
+.logic-node--ultimate {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
 .logic-node__handle {
   width: 10px;
   height: 10px;
@@ -289,6 +328,27 @@ const handleClass = computed(() => [
 .logic-node__handle--end {
   background: #b91c1c;
   box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.2);
+}
+
+.logic-node__handle--skill,
+.logic-node__handle--core {
+  background: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.logic-node__handle--specialized {
+  background: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2);
+}
+
+.logic-node__handle--advanced {
+  background: #db2777;
+  box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.2);
+}
+
+.logic-node__handle--ultimate {
+  background: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
 }
 </style>
 

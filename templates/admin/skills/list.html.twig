@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Skills - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>🧠 Skill Library</h2>
+    <a class="btn" href="{{ path('admin_classes_list') }}">Посмотреть классы</a>
+</div>
+
+{% if skills is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">Скиллы пока не добавлены. Используйте редактор, чтобы создать дерево навыков.</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Тип</th>
+                <th>Минимальный уровень</th>
+                <th>Классы</th>
+                <th>Предков</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for skill in skills %}
+            <tr>
+                <td>{{ skill.id }}</td>
+                <td><strong>{{ skill.name }}</strong></td>
+                <td>{{ skill.tier|default('—') }}</td>
+                <td>{{ skill.requiredLevel|default('—') }}</td>
+                <td>{{ skill.requiredClasses|length }}</td>
+                <td>{{ skill.prerequisiteSkills|length }}</td>
+                <td>
+                    <a href="{{ path('admin_skills_edit', {id: skill.id}) }}" class="btn" style="padding: 6px 12px; font-size: 14px;">
+                        Редактировать
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}

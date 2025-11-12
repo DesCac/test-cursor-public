@@ -38,73 +38,189 @@
       </button>
     </nav>
 
-    <section class="properties-panel__content" v-if="node">
-      <template v-if="currentTab === 'general'">
-        <fieldset class="properties-panel__group">
-          <label class="properties-panel__label">Тип узла</label>
-          <select v-model="node.data.nodeType" class="properties-panel__select">
-            <option v-for="option in nodeTypeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </fieldset>
+      <section class="properties-panel__content" v-if="node">
+        <template v-if="currentTab === 'general'">
+          <template v-if="context === 'skill'">
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Тип навыка</label>
+              <select v-model="node.data.nodeType" class="properties-panel__select">
+                <option v-for="option in nodeTypeOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </fieldset>
 
-        <fieldset class="properties-panel__group">
-          <label class="properties-panel__label">Заголовок</label>
-          <input
-            v-model="node.data.title"
-            type="text"
-            class="properties-panel__input"
-            placeholder="Краткий заголовок"
-          />
-        </fieldset>
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Название</label>
+              <input
+                v-model="node.data.title"
+                type="text"
+                class="properties-panel__input"
+                placeholder="Например, «Пламенный всплеск»"
+              />
+            </fieldset>
 
-        <fieldset v-if="context === 'dialog'" class="properties-panel__group">
-          <label class="properties-panel__label">Описание / текст</label>
-          <textarea
-            v-model="node.data.body"
-            rows="5"
-            class="properties-panel__textarea"
-            placeholder="Что произносит NPC или что должно произойти"
-          ></textarea>
-        </fieldset>
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Описание</label>
+              <textarea
+                v-model="node.data.body"
+                rows="5"
+                class="properties-panel__textarea"
+                placeholder="Кратко опишите эффект навыка"
+              ></textarea>
+            </fieldset>
 
-        <fieldset v-else class="properties-panel__group">
-          <label class="properties-panel__label">
-            Данные узла (JSON)
-            <span class="properties-panel__hint">объект с параметрами цели/условия</span>
-          </label>
-          <textarea
-            v-model="node.data.payload"
-            rows="8"
-            class="properties-panel__textarea properties-panel__textarea--mono"
-            :class="{ 'properties-panel__textarea--error': nodeErrors.payload }"
-            placeholder='{"objective": "Найти вход"}'
-          ></textarea>
-          <p v-if="nodeErrors.payload" class="properties-panel__error">
-            {{ nodeErrors.payload }}
-          </p>
-        </fieldset>
-      </template>
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Минимальный уровень героя</label>
+              <input
+                v-model.number="node.data.requiredLevel"
+                type="number"
+                min="0"
+                class="properties-panel__input"
+                placeholder="0"
+              />
+            </fieldset>
 
-      <template v-else-if="currentTab === 'conditions'">
-        <fieldset class="properties-panel__group">
-          <label class="properties-panel__label">
-            Условия (JSON)
-            <span class="properties-panel__hint">поддерживается произвольная структура</span>
-          </label>
-          <textarea
-            v-model="node.data.conditions"
-            rows="8"
-            class="properties-panel__textarea properties-panel__textarea--mono"
-            :class="{ 'properties-panel__textarea--error': hasNodeConditionsError }"
-            placeholder='{"level": {"min": 5}}'
-          ></textarea>
-          <p v-if="hasNodeConditionsError" class="properties-panel__error">
-            {{ nodeErrors.conditions }}
-          </p>
-        </fieldset>
-      </template>
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">
+                Требуемые классы
+                <span class="properties-panel__hint">выберите все классы, для которых доступен навык</span>
+              </label>
+              <select
+                v-model="node.data.requiredClassIds"
+                class="properties-panel__select properties-panel__select--multi"
+                multiple
+              >
+                <option
+                  v-for="option in classOptions"
+                  :key="option.value"
+                  :value="String(option.value)"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </fieldset>
+
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">
+                Требуемые квесты
+                <span class="properties-panel__hint">навык станет доступен после выполнения квестов</span>
+              </label>
+              <select
+                v-model="node.data.requiredQuestIds"
+                class="properties-panel__select properties-panel__select--multi"
+                multiple
+              >
+                <option
+                  v-for="option in questOptions"
+                  :key="option.value"
+                  :value="String(option.value)"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </fieldset>
+
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">
+                Метаданные навыка (JSON)
+                <span class="properties-panel__hint">опишите эффекты или числовые параметры</span>
+              </label>
+              <textarea
+                v-model="node.data.payload"
+                rows="6"
+                class="properties-panel__textarea properties-panel__textarea--mono"
+                :class="{ 'properties-panel__textarea--error': nodeErrors.payload }"
+                placeholder='{"effects":{"damage":40}}'
+              ></textarea>
+              <p v-if="nodeErrors.payload" class="properties-panel__error">
+                {{ nodeErrors.payload }}
+              </p>
+            </fieldset>
+          </template>
+
+          <template v-else-if="context === 'dialog'">
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Тип узла</label>
+              <select v-model="node.data.nodeType" class="properties-panel__select">
+                <option v-for="option in nodeTypeOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </fieldset>
+
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Заголовок</label>
+              <input
+                v-model="node.data.title"
+                type="text"
+                class="properties-panel__input"
+                placeholder="Краткий заголовок"
+              />
+            </fieldset>
+
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Описание / текст</label>
+              <textarea
+                v-model="node.data.body"
+                rows="5"
+                class="properties-panel__textarea"
+                placeholder="Что произносит NPC или что должно произойти"
+              ></textarea>
+            </fieldset>
+          </template>
+
+          <template v-else>
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">Тип узла</label>
+              <select v-model="node.data.nodeType" class="properties-panel__select">
+                <option v-for="option in nodeTypeOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </fieldset>
+
+            <fieldset class="properties-panel__group">
+              <label class="properties-panel__label">
+                Данные узла (JSON)
+                <span class="properties-panel__hint">объект с параметрами цели/условия</span>
+              </label>
+              <textarea
+                v-model="node.data.payload"
+                rows="8"
+                class="properties-panel__textarea properties-panel__textarea--mono"
+                :class="{ 'properties-panel__textarea--error': nodeErrors.payload }"
+                placeholder='{"objective": "Найти вход"}'
+              ></textarea>
+              <p v-if="nodeErrors.payload" class="properties-panel__error">
+                {{ nodeErrors.payload }}
+              </p>
+            </fieldset>
+          </template>
+        </template>
+
+        <template v-else-if="currentTab === 'conditions'">
+          <fieldset class="properties-panel__group">
+            <label class="properties-panel__label">
+              {{ context === 'skill' ? 'Дополнительные условия (JSON)' : 'Условия (JSON)' }}
+              <span class="properties-panel__hint">
+                {{ context === 'skill'
+                  ? 'опишите специфические требования: экипировка, атрибуты, теги'
+                  : 'поддерживается произвольная структура' }}
+              </span>
+            </label>
+            <textarea
+              v-model="node.data.conditions"
+              rows="8"
+              class="properties-panel__textarea properties-panel__textarea--mono"
+              :class="{ 'properties-panel__textarea--error': hasNodeConditionsError }"
+              :placeholder="context === 'skill' ? '{\"requiresDualDaggers\": true}' : '{\"level\": {\"min\": 5}}'"
+            ></textarea>
+            <p v-if="hasNodeConditionsError" class="properties-panel__error">
+              {{ nodeErrors.conditions }}
+            </p>
+          </fieldset>
+        </template>
 
       <template v-else-if="currentTab === 'transitions'">
         <div class="properties-panel__transitions">
@@ -213,6 +329,14 @@ const props = defineProps({
     type: String,
     default: 'dialog',
   },
+  classOptions: {
+    type: Array,
+    default: () => [],
+  },
+  questOptions: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(['delete-node', 'delete-edge', 'duplicate-node', 'select-edge']);
@@ -242,6 +366,22 @@ watch(
   () => props.node,
   () => {
     currentTab.value = 'general';
+    if (props.context === 'skill' && props.node) {
+      if (!Array.isArray(props.node.data?.requiredClassIds)) {
+        props.node.data.requiredClassIds = [];
+      }
+      if (!Array.isArray(props.node.data?.requiredQuestIds)) {
+        props.node.data.requiredQuestIds = [];
+      }
+      if (
+        props.node.data &&
+        props.node.data.requiredLevel !== null &&
+        props.node.data.requiredLevel !== undefined &&
+        Number.isNaN(Number(props.node.data.requiredLevel))
+      ) {
+        props.node.data.requiredLevel = null;
+      }
+    }
   }
 );
 
@@ -379,6 +519,10 @@ function handleDelete() {
   min-height: 80px;
   resize: vertical;
   line-height: 1.45;
+}
+
+.properties-panel__select--multi {
+  min-height: 120px;
 }
 
 .properties-panel__textarea--mono {

@@ -142,6 +142,9 @@ class QuestFixtures extends Fixture
         ]);
         $manager->persist($sideQuest);
 
+        $this->addReference('quest.main_ruins', $mainQuest);
+        $this->addReference('quest.collect_herbs', $sideQuest);
+
         $manager->flush();
     }
 }

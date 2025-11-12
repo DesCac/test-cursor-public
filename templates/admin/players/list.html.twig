@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Players - {{ parent() }}{% endblock %}
+
+{% block body %}
+<h2>🧑‍🚀 Игроки и персонажи</h2>
+
+{% if players is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">Игроки ещё не зарегистрированы.</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>TG User ID</th>
+                <th>Имя</th>
+                <th>Персонажей</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td>{{ player.id }}</td>
+                <td><code>{{ player.tgUserId }}</code></td>
+                <td>{{ player.displayName|default('—') }}</td>
+                <td>{{ player.characters|length }}</td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    {% if player.characters is empty %}
+                        <em style="color: #888;">Нет персонажей</em>
+                    {% else %}
+                        <ul style="margin: 10px 0 0 20px;">
+                            {% for character in player.characters %}
+                                <li>
+                                    <strong>{{ character.name }}</strong>,
+                                    класс: {{ character.class.name }},
+                                    уровень: {{ character.level }},
+                                    опыт: {{ character.experience }},
+                                    скиллов: {{ character.characterSkills|length }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
