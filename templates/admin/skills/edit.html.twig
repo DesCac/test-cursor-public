@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Skill {{ skill.name }} - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('build/skill-editor.css') }}">
+{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 20px;">
+    <a href="{{ path('admin_skills_list') }}" style="color: #667eea; text-decoration: none;">← Назад к списку навыков</a>
+</div>
+
+<h2>Редактор навыка: {{ skill.name }}</h2>
+<p style="color: #666; margin: 10px 0;">Slug: <code>{{ skill.slug }}</code></p>
+
+<div id="skill-editor" style="margin-top: 30px;">
+    <!-- Vue app mounts here -->
+</div>
+
+{% set requiredClassIds = [] %}
+{% for class in skill.requiredClasses %}
+    {% set requiredClassIds = requiredClassIds|merge([class.id]) %}
+{% endfor %}
+{% set requiredQuestIds = [] %}
+{% for quest in skill.requiredQuests %}
+    {% set requiredQuestIds = requiredQuestIds|merge([quest.id]) %}
+{% endfor %}
+{% set classPayload = [] %}
+{% for class in classes %}
+    {% set classPayload = classPayload|merge([{
+        id: class.id,
+        name: class.name,
+        slug: class.slug,
+        parentId: class.parent ? class.parent.id : null
+    }]) %}
+{% endfor %}
+{% set questPayload = [] %}
+{% for quest in quests %}
+    {% set questPayload = questPayload|merge([{
+        id: quest.id,
+        name: quest.name
+    }]) %}
+{% endfor %}
+
+<script>
+    window.skillData = {
+        id: {{ skill.id }},
+        name: "{{ skill.name|escape('js') }}",
+        slug: "{{ skill.slug|escape('js') }}",
+        description: "{{ skill.description|default('')|escape('js') }}",
+        requiredLevel: {{ skill.requiredLevel is not null ? skill.requiredLevel : 'null' }},
+        requiredClasses: {{ requiredClassIds|json_encode|raw }},
+        requiredQuests: {{ requiredQuestIds|json_encode|raw }},
+        availabilityRules: {{ skill.availabilityRules ? skill.availabilityRules|json_encode|raw : 'null' }},
+        classes: {{ classPayload|json_encode|raw }},
+        quests: {{ questPayload|json_encode|raw }},
+    };
+</script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="module" src="{{ asset('build/skill-editor.js') }}"></script>
+{% endblock %}

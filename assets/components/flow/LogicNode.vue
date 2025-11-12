@@ -63,6 +63,7 @@ const NODE_LABELS = {
   condition: 'Условие',
   objective: 'Цель',
   reward: 'Награда',
+  skill: 'Навык',
 };
 
 const typeLabel = computed(() => NODE_LABELS[props.data.nodeType] || 'Узел');

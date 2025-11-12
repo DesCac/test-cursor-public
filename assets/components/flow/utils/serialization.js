@@ -168,6 +168,108 @@ export function serializeQuestGraph(nodes, edges) {
   return { nodes: formattedNodes, edges: formattedEdges };
 }
 
+export function normalizeSkillGraph(graph) {
+  const focusId = graph.focusSkillId ? String(graph.focusSkillId) : null;
+  const nodes = (graph.nodes || []).map((skill) => ({
+    id: String(skill.id),
+    type: 'logic-node',
+    position: {
+      x: typeof skill.positionX === 'number' ? skill.positionX : 0,
+      y: typeof skill.positionY === 'number' ? skill.positionY : 0,
+    },
+    data: {
+      nodeType: 'skill',
+      title: skill.name || 'Навык',
+      body: skill.description || '',
+      slug: skill.slug || '',
+      requiredLevel: typeof skill.requiredLevel === 'number' ? skill.requiredLevel : '',
+      availabilityRules: formatJson(skill.availabilityRules),
+      conditions: formatJson(skill.availabilityRules),
+      requiredClasses: Array.isArray(skill.requiredClasses) ? skill.requiredClasses.map(String) : [],
+      requiredQuests: Array.isArray(skill.requiredQuests) ? skill.requiredQuests.map(String) : [],
+    },
+    errorState: {},
+    meta: {
+      isFocus: focusId ? String(skill.id) === focusId : false,
+    },
+  }));
+
+  const edges = (graph.links || []).map((link) => ({
+    id: link.id ? String(link.id) : buildEdgeId(link.parentId, link.childId, Math.random().toString(16).slice(2)),
+    type: 'logic-edge',
+    source: String(link.parentId),
+    target: String(link.childId),
+    data: {
+      requiresAllParents: link.requiresAllParents !== false,
+      metadata: formatJson(link.metadata),
+    },
+    errorState: {},
+  }));
+
+  return { nodes, edges, focusId };
+}
+
+export function serializeSkillGraph(nodes, edges, options = {}) {
+  const formattedNodes = nodes.map((node) => {
+    const nodeTitle = node.data?.title || node.id;
+    const availabilityRules = safeParseJson(node.data?.availabilityRules || '', {
+      entity: 'node',
+      field: 'availabilityRules',
+      id: node.id,
+      message: `Навык "${nodeTitle}" содержит некорректный JSON правил доступности`,
+    });
+
+    return {
+      id: node.id.startsWith('temp-') ? null : Number(node.id) || node.id,
+      clientId: node.id,
+      name: node.data?.title || 'Навык',
+      slug: node.data?.slug || '',
+      description: node.data?.body || '',
+      requiredLevel: node.data?.requiredLevel === '' || node.data?.requiredLevel === null
+        ? null
+        : Number(node.data.requiredLevel),
+      availabilityRules: isEmptyObject(availabilityRules) ? null : availabilityRules,
+      positionX: node.position?.x ?? 0,
+      positionY: node.position?.y ?? 0,
+      requiredClasses: (node.data?.requiredClasses || []).map((value) => Number(value)).filter(Number.isFinite),
+      requiredQuests: (node.data?.requiredQuests || []).map((value) => Number(value)).filter(Number.isFinite),
+    };
+  });
+
+  const formattedEdges = edges.map((edge) => {
+    const metadata = safeParseJson(edge.data?.metadata || '', {
+      entity: 'edge',
+      field: 'metadata',
+      id: edge.id,
+      message: `Связь ${edge.id} содержит некорректный JSON`,
+    });
+
+    return {
+      id: edge.id.startsWith('temp-edge-') ? null : Number(edge.id) || edge.id,
+      clientId: edge.id,
+      parentId: edge.source,
+      childId: edge.target,
+      requiresAllParents: edge.data?.requiresAllParents !== false,
+      metadata: isEmptyObject(metadata) ? null : metadata,
+    };
+  });
+
+  const payload = {
+    nodes: formattedNodes,
+    links: formattedEdges,
+  };
+
+  if (options.focusSkillId) {
+    payload.focusSkillId = options.focusSkillId;
+  }
+
+  if (Array.isArray(options.deletedSkillIds)) {
+    payload.deletedSkillIds = options.deletedSkillIds;
+  }
+
+  return payload;
+}
+
 function formatType(type) {
   const map = {
     start: 'Старт',
@@ -244,5 +346,9 @@ function safeParseJson(value, meta) {
   } catch {
     throw new GraphValidationError(meta?.message || 'Некорректный JSON', meta);
   }
+}
+
+function isEmptyObject(value) {
+  return !value || (typeof value === 'object' && Object.keys(value).length === 0);
 }
 

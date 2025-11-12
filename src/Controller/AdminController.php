@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\NPC;
 use App\Entity\Quest;
+use App\Entity\PlayerClass;
+use App\Entity\Skill;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -63,6 +65,32 @@ class AdminController extends AbstractController
 
         return $this->render('admin/quests/edit.html.twig', [
             'quest' => $quest,
+        ]);
+    }
+
+    #[Route('/skills', name: 'admin_skills_list')]
+    public function skillsList(EntityManagerInterface $em): Response
+    {
+        $skills = $em->getRepository(Skill::class)->findBy([], ['name' => 'ASC']);
+
+        return $this->render('admin/skills/list.html.twig', [
+            'skills' => $skills,
+        ]);
+    }
+
+    #[Route('/skills/{id}/edit', name: 'admin_skills_edit', requirements: ['id' => '\d+'])]
+    public function skillsEdit(int $id, EntityManagerInterface $em): Response
+    {
+        $skill = $em->getRepository(Skill::class)->find($id);
+
+        if (!$skill) {
+            throw $this->createNotFoundException('Skill not found');
+        }
+
+        return $this->render('admin/skills/edit.html.twig', [
+            'skill' => $skill,
+            'classes' => $em->getRepository(PlayerClass::class)->findBy([], ['name' => 'ASC']),
+            'quests' => $em->getRepository(Quest::class)->findBy([], ['name' => 'ASC']),
         ]);
     }
 }

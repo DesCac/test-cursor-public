@@ -30,6 +30,42 @@ Query:
                     choiceId:
                         type: "Int!"
                 resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\ValidationResolver').validateDialogChoice(args['npcId'], args['nodeId'], args['choiceId'])"
+              skill:
+                  type: "Skill"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\SkillResolver').resolve(args['id'])"
+              skills:
+                  type: "[Skill!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\SkillResolver').resolveAll()"
+              player:
+                  type: "Player"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerResolver').resolve(args['id'])"
+              players:
+                  type: "[Player!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerResolver').resolveAll()"
+              playerCharacter:
+                  type: "PlayerCharacter"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerCharacterResolver').resolve(args['id'])"
+              playerCharacters:
+                  type: "[PlayerCharacter!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerCharacterResolver').resolveAll()"
+              playerClass:
+                  type: "PlayerClass"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerClassResolver').resolve(args['id'])"
+              playerClasses:
+                  type: "[PlayerClass!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerClassResolver').resolveAll()"
 
 NPC:
     type: object
@@ -149,3 +185,146 @@ ValidationResult:
                 type: "String"
             nextNodeId:
                 type: "Int"
+  Skill:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              name:
+                  type: "String!"
+              slug:
+                  type: "String!"
+              description:
+                  type: "String"
+              requiredLevel:
+                  type: "Int"
+              availabilityRules:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getAvailabilityRules())"
+              positionX:
+                  type: "Float"
+              positionY:
+                  type: "Float"
+              requiredClasses:
+                  type: "[PlayerClass!]!"
+                  resolve: "@=value.getRequiredClasses()"
+              requiredQuests:
+                  type: "[Quest!]!"
+                  resolve: "@=value.getRequiredQuests()"
+              parents:
+                  type: "[SkillLink!]!"
+                  resolve: "@=value.getIncomingLinks()"
+              children:
+                  type: "[SkillLink!]!"
+                  resolve: "@=value.getOutgoingLinks()"
+  SkillLink:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              parent:
+                  type: "Skill!"
+                  resolve: "@=value.getParentSkill()"
+              child:
+                  type: "Skill!"
+                  resolve: "@=value.getChildSkill()"
+              requiresAllParents:
+                  type: "Boolean!"
+                  resolve: "@=value.requiresAllParents()"
+              metadata:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getMetadata())"
+  Player:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              tgUserId:
+                  type: "String!"
+              displayName:
+                  type: "String!"
+              characters:
+                  type: "[PlayerCharacter!]!"
+                  resolve: "@=value.getCharacters()"
+  PlayerCharacter:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              name:
+                  type: "String!"
+              level:
+                  type: "Int!"
+              experience:
+                  type: "Int!"
+              attributes:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getAttributes())"
+              player:
+                  type: "Player!"
+                  resolve: "@=value.getPlayer()"
+              playerClass:
+                  type: "PlayerClass!"
+                  resolve: "@=value.getPlayerClass()"
+              completedQuests:
+                  type: "[Quest!]!"
+                  resolve: "@=value.getCompletedQuests()"
+              skillUnlocks:
+                  type: "[CharacterSkill!]!"
+                  resolve: "@=value.getSkills()"
+              unlockableSkills:
+                  type: "[SkillAvailability!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\SkillAvailabilityResolver').resolveForCharacter(value)"
+  PlayerClass:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              name:
+                  type: "String!"
+              slug:
+                  type: "String!"
+              description:
+                  type: "String"
+              parent:
+                  type: "PlayerClass"
+                  resolve: "@=value.getParent()"
+              children:
+                  type: "[PlayerClass!]!"
+                  resolve: "@=value.getChildren()"
+              skills:
+                  type: "[Skill!]!"
+                  resolve: "@=value.getSkills()"
+  CharacterSkill:
+      type: object
+      config:
+          fields:
+              id:
+                  type: "Int!"
+              skill:
+                  type: "Skill!"
+                  resolve: "@=value.getSkill()"
+              unlockedAt:
+                  type: "String!"
+                  resolve: "@=value.getUnlockedAt().format('c')"
+              unlockContext:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getUnlockContext())"
+  SkillAvailability:
+      type: object
+      config:
+          fields:
+              skill:
+                  type: "Skill!"
+                  resolve: "@=value['skill']"
+              canUnlock:
+                  type: "Boolean!"
+                  resolve: "@=value['canUnlock']"
+              blockingReasons:
+                  type: "[String!]!"
+                  resolve: "@=value['blockingReasons']"
