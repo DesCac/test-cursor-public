@@ -16,6 +16,9 @@
           <button type="button" class="flow-toolbar__btn" @click="fitToView">
             ◉ Fit
           </button>
+          <button type="button" class="flow-toolbar__btn" @click="beautify">
+            ✨ Beautify
+          </button>
           <button type="button" class="flow-toolbar__btn" @click="resetPosition">
             ↺ Reset
           </button>
@@ -553,6 +556,45 @@ function fitToView() {
   if (typeof fitView === 'function') {
     fitView({ padding: 0.18, includeHiddenNodes: true });
   }
+}
+
+function beautify() {
+  if (!nodes.value.length) return;
+
+  const nodeWidth = 220;
+  const nodeHeight = 110;
+  const horizontalSpacing = 280;
+  const verticalSpacing = 150;
+
+  // Группируем узлы по типам для лучшего размещения
+  const startNodes = nodes.value.filter(node => node.data?.nodeType === 'start');
+  const objectiveNodes = nodes.value.filter(node => node.data?.nodeType === 'objective');
+  const conditionNodes = nodes.value.filter(node => node.data?.nodeType === 'condition');
+  const rewardNodes = nodes.value.filter(node => node.data?.nodeType === 'reward');
+  const endNodes = nodes.value.filter(node => node.data?.nodeType === 'end');
+
+  const columns = [startNodes, objectiveNodes, conditionNodes, rewardNodes, endNodes];
+  const maxColumnSize = Math.max(...columns.map(col => col.length));
+
+  columns.forEach((columnNodes, columnIndex) => {
+    columnNodes.forEach((node, nodeIndex) => {
+      const x = columnIndex * horizontalSpacing;
+      const y = (nodeIndex - columnNodes.length / 2) * verticalSpacing + (maxColumnSize * verticalSpacing / 2);
+
+      node.position.x = x;
+      node.position.y = y;
+    });
+  });
+
+  // Обновляем nodes, чтобы VueFlow отреагировал на изменения
+  nodes.value = [...nodes.value];
+
+  // Через небольшой таймаут применяем fitView для оптимального вида
+  setTimeout(() => {
+    if (typeof fitView === 'function') {
+      fitView({ padding: 0.2, includeHiddenNodes: true });
+    }
+  }, 100);
 }
 
 function resetPosition() {
