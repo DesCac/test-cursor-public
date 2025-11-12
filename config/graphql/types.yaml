@@ -56,10 +56,13 @@ Quest:
                 type: "String"
             objectives:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getObjectives())"
             rewards:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getRewards())"
             requirements:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getRequirements())"
             logicNodes:
                 type: "[QuestNode!]!"
 
@@ -75,12 +78,14 @@ DialogNode:
                 type: "String"
             conditions:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
             positionX:
                 type: "Float"
             positionY:
                 type: "Float"
             connections:
                 type: "[DialogConnection!]!"
+                resolve: "@=value.getOutgoingConnections()"
 
 DialogConnection:
     type: object
@@ -96,6 +101,7 @@ DialogConnection:
                 type: "String"
             conditions:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
 
 QuestNode:
     type: object
@@ -107,14 +113,17 @@ QuestNode:
                 type: "String!"
             data:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getData())"
             conditions:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
             positionX:
                 type: "Float"
             positionY:
                 type: "Float"
             connections:
                 type: "[QuestConnection!]!"
+                resolve: "@=value.getOutgoingConnections()"
 
 QuestConnection:
     type: object
@@ -128,6 +137,7 @@ QuestConnection:
                 type: "QuestNode!"
             conditions:
                 type: "String"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
 
 ValidationResult:
     type: object
