@@ -917,6 +917,7 @@ function generateEdgeId() {
 :deep(.vue-flow__edge-label) {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 255, 0.95));
   padding: 7px 14px;
+  margin: 8px;
   border-radius: 10px;
   border: 2px solid rgba(102, 126, 234, 0.5);
   box-shadow: 0 6px 20px rgba(45, 65, 132, 0.25), 
@@ -928,6 +929,11 @@ function generateEdgeId() {
   backdrop-filter: blur(10px);
   outline: 1px solid rgba(102, 126, 234, 0.15);
   outline-offset: 2px;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
 

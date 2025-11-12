@@ -8,8 +8,3 @@ graphql_endpoint:
     path: /graphql
     defaults:
         _controller: Overblog\GraphQLBundle\Controller\GraphController::endpointAction
-
-graphql_explorer:
-    path: /graphiql
-    defaults:
-        _controller: Overblog\GraphQLBundle\Controller\GraphController::graphiQLAction

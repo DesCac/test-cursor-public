@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Explorer - RPG Quest & NPC Service</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #graphiql {
+            height: 100vh;
+        }
+        .graphiql-container {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
+    
+    <!-- GraphiQL CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/graphiql@3.0.10/graphiql.min.css" />
+</head>
+<body>
+    <div id="graphiql">Loading...</div>
+    
+    <!-- React dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- GraphiQL -->
+    <script crossorigin src="https://unpkg.com/graphiql@3.0.10/graphiql.min.js"></script>
+    
+    <script>
+        // Определяем URL для GraphQL endpoint
+        const graphqlUrl = window.location.origin + '/graphql';
+        
+        // Создаем fetcher для GraphiQL
+        const fetcher = GraphiQL.createFetcher({
+            url: graphqlUrl,
+        });
+        
+        // Рендерим GraphiQL
+        const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+        root.render(
+            React.createElement(GraphiQL, {
+                fetcher: fetcher,
+                defaultQuery: `# Добро пожаловать в GraphQL Explorer!
+# 
+# Примеры запросов:
+
+# Получить список всех NPC
+query GetNPCs {
+  npcs {
+    id
+    name
+    description
+  }
+}
+
+# Получить список всех квестов
+query GetQuests {
+  quests {
+    id
+    name
+    description
+  }
+}
+
+# Получить конкретный NPC с диалогами
+query GetNPC {
+  npc(id: 1) {
+    id
+    name
+    description
+    dialogNodes {
+      id
+      type
+      text
+    }
+  }
+}
+
+# Получить конкретный квест
+query GetQuest {
+  quest(id: 1) {
+    id
+    name
+    description
+    questNodes {
+      id
+      type
+      title
+    }
+  }
+}
+`,
+            })
+        );
+    </script>
+</body>
+</html>
+

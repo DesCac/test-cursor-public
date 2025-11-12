@@ -4,9 +4,9 @@
   "description": "RPG Quest & NPC Service",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --mode development --sourcemap",
     "build": "vite build",
-    "watch": "vite build --watch"
+    "watch": "vite build --watch --mode development --sourcemap"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
