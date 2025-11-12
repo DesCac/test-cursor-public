@@ -2,20 +2,9 @@ body {
     background-color: lightgray;
 }
 
-/* Force node visibility - DEBUG */
-.vue-flow__node {
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: all !important;
-}
-
-.vue-flow__node .logic-node {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-/* VueFlow Global Styles */
+/* ========================================
+   VueFlow Global Styles - MUST BE FIRST
+   ======================================== */
 .vue-flow {
     background: #f8fafc !important;
 }
@@ -82,6 +71,158 @@ body {
 }
 
 .vue-flow__controls-button:hover {
-    background: #f0f4ff !important;
-    border-color: #667eea !important;
+  background: #f0f4ff !important;
+  border-color: #667eea !important;
+}
+
+/* ========================================
+   LogicNode Styles - CRITICAL
+   ======================================== */
+.logic-node {
+  position: relative !important;
+  width: 240px !important;
+  min-height: 100px !important;
+  border-radius: 12px !important;
+  border: 2px solid rgba(102, 126, 234, 0.3) !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03) !important;
+  padding: 0 !important;
+  color: #1f2a56 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+}
+
+.logic-node__header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px 14px !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.08)) !important;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.15) !important;
+}
+
+.logic-node__badge {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: #4c51bf !important;
+}
+
+.logic-node__status {
+  font-size: 14px !important;
+}
+
+.logic-node__body {
+  padding: 12px 14px !important;
+}
+
+.logic-node__title {
+  margin: 0 0 6px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #1a202c !important;
+}
+
+.logic-node__text {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  color: #4a5568 !important;
+}
+
+.logic-node:hover {
+  border-color: rgba(102, 126, 234, 0.5) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.2) !important;
+}
+
+.logic-node--selected {
+  border-color: #667eea !important;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Node Type Specific Styles */
+.logic-node--start .logic-node__header {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08)) !important;
+}
+
+.logic-node--start .logic-node__badge {
+  color: #047857 !important;
+}
+
+.logic-node--start {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.logic-node--dialog .logic-node__header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.08)) !important;
+}
+
+.logic-node--dialog .logic-node__badge {
+  color: #1e40af !important;
+}
+
+.logic-node--dialog {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.logic-node--choice .logic-node__header {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.08)) !important;
+}
+
+.logic-node--choice .logic-node__badge {
+  color: #92400e !important;
+}
+
+.logic-node--choice {
+  border-color: rgba(251, 191, 36, 0.4) !important;
+}
+
+.logic-node--action .logic-node__header {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(124, 58, 237, 0.08)) !important;
+}
+
+.logic-node--action .logic-node__badge {
+  color: #6d28d9 !important;
+}
+
+.logic-node--action {
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+.logic-node--condition .logic-node__header {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(219, 39, 119, 0.08)) !important;
+}
+
+.logic-node--condition .logic-node__badge {
+  color: #9d174d !important;
+}
+
+.logic-node--condition {
+  border-color: rgba(236, 72, 153, 0.4) !important;
+}
+
+.logic-node--reward .logic-node__header {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(22, 163, 74, 0.08)) !important;
+}
+
+.logic-node--reward .logic-node__badge {
+  color: #15803d !important;
+}
+
+.logic-node--reward {
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
+.logic-node--end .logic-node__header {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08)) !important;
+}
+
+.logic-node--end .logic-node__badge {
+  color: #b91c1c !important;
+}
+
+.logic-node--end {
+  border-color: rgba(239, 68, 68, 0.4) !important;
 }
