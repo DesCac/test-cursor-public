@@ -585,7 +585,8 @@ function generateEdgeId() {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 0;
-  height: 680px;
+  height: calc(100vh - 180px);
+  min-height: 600px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(102, 126, 234, 0.25);
