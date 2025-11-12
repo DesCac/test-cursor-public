@@ -5,7 +5,7 @@
 Были исправлены следующие проблемы в GraphQL схеме:
 
 1. **Поле `connections`**: Теперь корректно маппится на `outgoingConnections()` из Entity
-2. **JSON поля**: `conditions`, `data`, `objectives`, `rewards`, `requirements` теперь корректно сериализуются в JSON строки
+2. **JSON поля**: `conditions`, `data`, `objectives`, `rewards`, `requirements` теперь корректно сериализуются через специальный `JsonFieldResolver`
 3. **Правильные имена полей**:
    - Используйте `nodeType` (не `type`) для DialogNode и QuestNode
    - Используйте `logicNodes` (не `questNodes`) для Quest
@@ -118,3 +118,29 @@ query {
 - **JSON поля** возвращаются как строки в формате JSON. Для их использования во фронтенде нужно выполнить `JSON.parse()`
 - Поле **`connections`** возвращает только исходящие соединения (outgoing connections) из узла
 - Имена полей чувствительны к регистру - используйте точные имена, указанные в примерах
+
+## Обработка JSON полей во фронтенде
+
+```javascript
+// Пример обработки квеста
+const quest = data.quest;
+
+// Парсинг JSON полей
+const objectives = quest.objectives ? JSON.parse(quest.objectives) : [];
+const rewards = quest.rewards ? JSON.parse(quest.rewards) : {};
+const requirements = quest.requirements ? JSON.parse(quest.requirements) : {};
+
+console.log('Цели квеста:', objectives);
+console.log('Награды:', rewards);
+console.log('Требования:', requirements);
+```
+
+```javascript
+// Пример обработки узла диалога
+const dialogNode = data.npc.dialogNodes[0];
+
+// Парсинг conditions
+const conditions = dialogNode.conditions ? JSON.parse(dialogNode.conditions) : {};
+
+console.log('Условия узла:', conditions);
+```

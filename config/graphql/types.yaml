@@ -56,13 +56,13 @@ Quest:
                 type: "String"
             objectives:
                 type: "String"
-                resolve: "@=value.getObjectives() ? json_encode(value.getObjectives()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getObjectives())"
             rewards:
                 type: "String"
-                resolve: "@=value.getRewards() ? json_encode(value.getRewards()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getRewards())"
             requirements:
                 type: "String"
-                resolve: "@=value.getRequirements() ? json_encode(value.getRequirements()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getRequirements())"
             logicNodes:
                 type: "[QuestNode!]!"
 
@@ -78,7 +78,7 @@ DialogNode:
                 type: "String"
             conditions:
                 type: "String"
-                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
             positionX:
                 type: "Float"
             positionY:
@@ -101,7 +101,7 @@ DialogConnection:
                 type: "String"
             conditions:
                 type: "String"
-                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
 
 QuestNode:
     type: object
@@ -113,10 +113,10 @@ QuestNode:
                 type: "String!"
             data:
                 type: "String"
-                resolve: "@=value.getData() ? json_encode(value.getData()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getData())"
             conditions:
                 type: "String"
-                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
             positionX:
                 type: "Float"
             positionY:
@@ -137,7 +137,7 @@ QuestConnection:
                 type: "QuestNode!"
             conditions:
                 type: "String"
-                resolve: "@=value.getConditions() ? json_encode(value.getConditions()) : null"
+                resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonFieldResolver').resolve(value.getConditions())"
 
 ValidationResult:
     type: object
