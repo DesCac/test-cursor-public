@@ -6,20 +6,23 @@
       @drag-node="handleDragFromPalette"
     />
 
-    <section class="flow-main">
-      <header class="flow-toolbar">
-        <div class="flow-toolbar__left">
-          <h3 class="flow-toolbar__title">Редактор логики квеста</h3>
-          <span class="flow-toolbar__subtitle">{{ questTitle }}</span>
-        </div>
-        <div class="flow-toolbar__center">
-          <button type="button" class="flow-toolbar__btn" @click="fitToView">
-            ◉ Fit
-          </button>
-          <button type="button" class="flow-toolbar__btn" @click="resetPosition">
-            ↺ Reset
-          </button>
-      </div>
+      <section class="flow-main">
+        <header class="flow-toolbar">
+          <div class="flow-toolbar__left">
+            <h3 class="flow-toolbar__title">Редактор логики квеста</h3>
+            <span class="flow-toolbar__subtitle">{{ questTitle }}</span>
+          </div>
+          <div class="flow-toolbar__center">
+            <button type="button" class="flow-toolbar__btn" @click="fitToView">
+              ◉ Fit
+            </button>
+            <button type="button" class="flow-toolbar__btn" @click="beautifyLayout">
+              ✨ Beautify
+            </button>
+            <button type="button" class="flow-toolbar__btn" @click="resetPosition">
+              ↺ Reset
+            </button>
+          </div>
         <div class="flow-toolbar__actions">
           <span class="flow-toolbar__status" :class="{ 'flow-toolbar__status--dirty': isDirty }">
             {{ isDirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены' }}
@@ -118,6 +121,7 @@ import {
   serializeQuestGraph,
   GraphValidationError,
 } from './flow/utils/serialization';
+import { beautifyGraphLayout } from './flow/utils/layout';
 
 const nodeTypes = {
   'logic-node': LogicNode,
@@ -553,6 +557,15 @@ function fitToView() {
   if (typeof fitView === 'function') {
     fitView({ padding: 0.18, includeHiddenNodes: true });
   }
+}
+
+function beautifyLayout() {
+  if (!nodes.value.length) {
+    return;
+  }
+
+  nodes.value = beautifyGraphLayout(nodes.value, edges.value);
+  nextTickFitView();
 }
 
 function resetPosition() {
