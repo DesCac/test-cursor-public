@@ -30,7 +30,14 @@
 import { computed } from 'vue';
 import { Handle, Position } from '@vue-flow/core';
 
+// Отключаем наследование атрибутов чтобы избежать [object Object] в DOM
+defineOptions({
+  inheritAttrs: false
+});
+
 const props = defineProps({
+  id: String,
+  type: String,
   data: {
     type: Object,
     default: () => ({}),
@@ -39,6 +46,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  dragging: Boolean,
+  resizing: Boolean,
+  connectable: Boolean,
+  position: Object,
+  dimensions: Object,
+  zIndex: [Number, String],
 });
 
 const NODE_LABELS = {
