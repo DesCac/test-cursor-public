@@ -916,14 +916,18 @@ function generateEdgeId() {
 
 :deep(.vue-flow__edge-label) {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 255, 0.95));
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  box-shadow: 0 4px 12px rgba(45, 65, 132, 0.15), 0 2px 4px rgba(102, 126, 234, 0.1);
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(45, 65, 132, 0.25), 
+              0 2px 8px rgba(102, 126, 234, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   font-size: 12px;
   font-weight: 600;
   color: #404b8c;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  outline: 1px solid rgba(102, 126, 234, 0.15);
+  outline-offset: 2px;
 }
 </style>
 
