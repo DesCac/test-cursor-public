@@ -915,19 +915,21 @@ function generateEdgeId() {
 }
 
 :deep(.vue-flow__edge-label) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 255, 0.95));
-  padding: 7px 14px;
-  border-radius: 10px;
-  border: 2px solid rgba(102, 126, 234, 0.5);
-  box-shadow: 0 6px 20px rgba(45, 65, 132, 0.25), 
-              0 2px 8px rgba(102, 126, 234, 0.2),
-              0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-  font-size: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 255, 1));
+  padding: 8px 16px;
+  margin: 0 8px;
+  border-radius: 12px;
+  border: 2px solid #667eea;
+  box-shadow: 0 8px 24px rgba(45, 65, 132, 0.3), 
+              0 4px 12px rgba(102, 126, 234, 0.25),
+              0 0 0 3px rgba(255, 255, 255, 1) inset,
+              0 0 0 6px rgba(255, 255, 255, 0.9);
+  font-size: 13px;
   font-weight: 600;
   color: #404b8c;
-  backdrop-filter: blur(10px);
-  outline: 1px solid rgba(102, 126, 234, 0.15);
-  outline-offset: 2px;
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+  line-height: 1.4;
 }
 </style>
 
