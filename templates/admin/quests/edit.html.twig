@@ -2,6 +2,11 @@
 
 {% block title %}Edit {{ quest.name }} - {{ parent() }}{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('build/quest-editor.css') }}">
+{% endblock %}
+
 {% block body %}
 <div style="margin-bottom: 20px;">
     <a href="{{ path('admin_quests_list') }}" style="color: #667eea; text-decoration: none;">← Back to Quests</a>

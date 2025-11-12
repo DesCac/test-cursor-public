@@ -47,15 +47,20 @@
           v-model:edges="edges"
           :node-types="nodeTypes"
           :default-edge-options="defaultEdgeOptions"
-          :min-zoom="0.2"
-          :max-zoom="2"
+          :min-zoom="0.1"
+          :max-zoom="4"
+          :fit-view-on-init="true"
+          :nodes-draggable="true"
+          :zoom-on-scroll="true"
+          :zoom-on-pinch="true"
+          :pan-on-scroll="false"
           @pane-click="clearSelection"
           @node-click="handleNodeClick"
           @edge-click="handleEdgeClick"
           @connect="handleConnect"
           @pane-ready="handlePaneReady"
         >
-          <Background pattern-color="#bfc4ff" :gap="24" />
+          <Background pattern-color="#cbd5e0" :gap="16" />
           <Controls position="top-left" />
           <MiniMap pannable zoomable />
       </VueFlow>
@@ -105,11 +110,6 @@ import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import axios from 'axios';
 
-import '@vue-flow/core/dist/style.css';
-import '@vue-flow/core/dist/theme-default.css';
-import '@vue-flow/controls/dist/style.css';
-import '@vue-flow/minimap/dist/style.css';
-
 import Palette from './flow/Palette.vue';
 import PropertiesPanel from './flow/PropertiesPanel.vue';
 import LogicNode from './flow/LogicNode.vue';
@@ -125,7 +125,11 @@ const nodeTypes = {
 
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  markerEnd: 'arrowclosed',
+  animated: false,
+  style: {
+    stroke: '#667eea',
+    strokeWidth: 2,
+  },
 };
 
 const NODE_META = {
@@ -617,12 +621,13 @@ function generateEdgeId() {
 }
 </script>
 
-<style scoped>
+<style>
 .flow-shell {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 0;
-  height: 680px;
+  height: calc(100vh - 180px);
+  min-height: 600px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(102, 126, 234, 0.25);

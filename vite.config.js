@@ -7,6 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'public/build',
     manifest: true,
+    cssCodeSplit: false,
     rollupOptions: {
       input: {
         'npc-editor': resolve(__dirname, 'assets/npc-editor.js'),
@@ -15,7 +16,16 @@ export default defineConfig({
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name.endsWith('.css')) {
+            // Извлекаем имя entry point из имени файла
+            const match = assetInfo.name.match(/npc-editor|quest-editor/);
+            if (match) {
+              return `${match[0]}.css`;
+            }
+          }
+          return '[name].[ext]';
+        }
       }
     }
   },

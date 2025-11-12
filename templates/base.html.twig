@@ -87,7 +87,7 @@
         }
     </style>
     {% block stylesheets %}{% endblock %}
-    {{ encore_entry_link_tags('app') }}
+    <link rel="stylesheet" href="{{ asset('build/style.css') }}">
 </head>
 <body>
     <div class="container">
