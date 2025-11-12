@@ -1,3 +1,74 @@
 body {
     background-color: lightgray;
 }
+
+/* VueFlow Global Styles */
+.vue-flow {
+    background: #f8fafc !important;
+}
+
+.vue-flow__node {
+    z-index: 5 !important;
+}
+
+.vue-flow__edge {
+    z-index: 3 !important;
+}
+
+.vue-flow__edge-path {
+    stroke: #667eea !important;
+    stroke-width: 2px !important;
+}
+
+.vue-flow__edge.selected .vue-flow__edge-path {
+    stroke: #4c51bf !important;
+    stroke-width: 3px !important;
+}
+
+.vue-flow__edge-text {
+    fill: #1a202c !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.vue-flow__edge-textbg {
+    fill: white !important;
+}
+
+.vue-flow__handle {
+    width: 10px !important;
+    height: 10px !important;
+    background: #667eea !important;
+    border: 2px solid white !important;
+    border-radius: 50% !important;
+}
+
+.vue-flow__handle:hover {
+    width: 14px !important;
+    height: 14px !important;
+    background: #4c51bf !important;
+}
+
+.vue-flow__background {
+    background: #f8fafc !important;
+}
+
+.vue-flow__minimap {
+    background: white !important;
+    border: 1px solid rgba(102, 126, 234, 0.2) !important;
+}
+
+.vue-flow__controls {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.vue-flow__controls-button {
+    background: white !important;
+    border: 1px solid rgba(102, 126, 234, 0.2) !important;
+    color: #4c51bf !important;
+}
+
+.vue-flow__controls-button:hover {
+    background: #f0f4ff !important;
+    border-color: #667eea !important;
+}

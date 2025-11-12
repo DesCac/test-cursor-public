@@ -47,15 +47,20 @@
           v-model:edges="edges"
           :node-types="nodeTypes"
           :default-edge-options="defaultEdgeOptions"
-          :min-zoom="0.2"
-          :max-zoom="2"
+          :min-zoom="0.1"
+          :max-zoom="4"
+          :fit-view-on-init="true"
+          :nodes-draggable="true"
+          :zoom-on-scroll="true"
+          :zoom-on-pinch="true"
+          :pan-on-scroll="false"
           @pane-click="clearSelection"
           @node-click="handleNodeClick"
           @edge-click="handleEdgeClick"
           @connect="handleConnect"
           @pane-ready="handlePaneReady"
         >
-          <Background pattern-color="#bfc4ff" :gap="24" />
+          <Background pattern-color="#cbd5e0" :gap="16" />
           <Controls position="top-left" />
           <MiniMap pannable zoomable />
       </VueFlow>
@@ -125,7 +130,11 @@ const nodeTypes = {
 
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  markerEnd: 'arrowclosed',
+  animated: false,
+  style: {
+    stroke: '#667eea',
+    strokeWidth: 2,
+  },
 };
 
 const NODE_META = {
