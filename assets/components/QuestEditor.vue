@@ -110,11 +110,6 @@ import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import axios from 'axios';
 
-import '@vue-flow/core/dist/style.css';
-import '@vue-flow/core/dist/theme-default.css';
-import '@vue-flow/controls/dist/style.css';
-import '@vue-flow/minimap/dist/style.css';
-
 import Palette from './flow/Palette.vue';
 import PropertiesPanel from './flow/PropertiesPanel.vue';
 import LogicNode from './flow/LogicNode.vue';
