@@ -625,10 +625,10 @@ function beautifyLayout() {
   // Параметры расстановки
   const nodeWidth = 220;
   const nodeHeight = 110;
-  const horizontalGap = 100; // Расстояние между узлами по горизонтали
-  const verticalGap = 140;   // Расстояние между уровнями (больше для лейблов)
-  const startX = 100;
-  const startY = 100;
+  const horizontalGap = 150; // Расстояние между узлами по горизонтали
+  const verticalGap = 200;   // Расстояние между уровнями (больше для лейблов)
+  const startX = 200;
+  const startY = 150;
 
   // Располагаем узлы
   levels.forEach((levelNodes, levelIndex) => {
