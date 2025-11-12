@@ -18,6 +18,9 @@
           <button type="button" class="flow-toolbar__btn" @click="fitToView">
             ◉ Fit
           </button>
+          <button type="button" class="flow-toolbar__btn" @click="beautifyLayout">
+            ✨ Beautify
+          </button>
           <button type="button" class="flow-toolbar__btn" @click="resetPosition">
             ↺ Reset
           </button>
@@ -520,6 +523,96 @@ function resetPosition() {
   if (typeof setViewport === 'function') {
     setViewport({ x: 0, y: 0, zoom: 1 });
   }
+}
+
+function beautifyLayout() {
+  if (nodes.value.length === 0) return;
+
+  // Создаём граф зависимостей
+  const nodeMap = new Map(nodes.value.map(n => [n.id, { ...n, level: -1, index: 0 }]));
+  const incomingCount = new Map(nodes.value.map(n => [n.id, 0]));
+  const outgoingMap = new Map();
+
+  // Подсчитываем входящие связи
+  edges.value.forEach(edge => {
+    incomingCount.set(edge.target, (incomingCount.get(edge.target) || 0) + 1);
+    if (!outgoingMap.has(edge.source)) {
+      outgoingMap.set(edge.source, []);
+    }
+    outgoingMap.get(edge.source).push(edge.target);
+  });
+
+  // Находим корневые узлы (без входящих связей)
+  const rootNodes = Array.from(nodeMap.keys()).filter(id => incomingCount.get(id) === 0);
+  
+  // Если нет корневых узлов, берём первый узел или узел типа 'start'
+  if (rootNodes.length === 0) {
+    const startNode = nodes.value.find(n => n.data?.nodeType === 'start');
+    rootNodes.push(startNode ? startNode.id : nodes.value[0].id);
+  }
+
+  // Распределяем узлы по уровням (BFS)
+  const levels = [];
+  const visited = new Set();
+  const queue = rootNodes.map(id => ({ id, level: 0 }));
+
+  while (queue.length > 0) {
+    const { id, level } = queue.shift();
+    if (visited.has(id)) continue;
+    
+    visited.add(id);
+    const node = nodeMap.get(id);
+    if (node) {
+      node.level = level;
+      if (!levels[level]) levels[level] = [];
+      levels[level].push(node);
+    }
+
+    const children = outgoingMap.get(id) || [];
+    children.forEach(childId => {
+      if (!visited.has(childId)) {
+        queue.push({ id: childId, level: level + 1 });
+      }
+    });
+  }
+
+  // Добавляем неподключённые узлы в конец
+  const unvisited = nodes.value.filter(n => !visited.has(n.id));
+  if (unvisited.length > 0) {
+    const lastLevel = levels.length;
+    levels[lastLevel] = unvisited.map(n => ({ ...n, level: lastLevel }));
+  }
+
+  // Параметры расстановки
+  const nodeWidth = 220;
+  const nodeHeight = 110;
+  const horizontalGap = 100; // Расстояние между узлами по горизонтали
+  const verticalGap = 140;   // Расстояние между уровнями (больше для лейблов)
+  const startX = 100;
+  const startY = 100;
+
+  // Располагаем узлы
+  levels.forEach((levelNodes, levelIndex) => {
+    const levelWidth = levelNodes.length * (nodeWidth + horizontalGap) - horizontalGap;
+    const offsetX = startX - levelWidth / 2;
+    
+    levelNodes.forEach((node, index) => {
+      const x = offsetX + index * (nodeWidth + horizontalGap) + levelWidth / 2;
+      const y = startY + levelIndex * (nodeHeight + verticalGap);
+      
+      const originalNode = nodes.value.find(n => n.id === node.id);
+      if (originalNode) {
+        originalNode.position = { x, y };
+      }
+    });
+  });
+
+  // Применяем изменения и подгоняем вид
+  nodes.value = [...nodes.value];
+  setTimeout(() => {
+    fitToView();
+    notify('success', 'Граф упорядочен');
+  }, 100);
 }
 
 function handlePaneReady() {
