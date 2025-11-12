@@ -1,58 +1,107 @@
 <template>
-  <div class="npc-editor">
-    <div class="editor-header">
-      <h3>Dialog Tree Editor</h3>
-      <div class="actions">
-        <button @click="addNode('dialog')" class="btn-add">+ Add Dialog</button>
-        <button @click="addNode('choice')" class="btn-add">+ Add Choice</button>
-        <button @click="saveGraph" class="btn-save">💾 Save</button>
-      </div>
-    </div>
+  <div class="flow-shell">
+    <Palette
+      :items="paletteItems"
+      @add-node="handleAddFromPalette"
+      @drag-node="handleDragFromPalette"
+    />
 
-    <div class="editor-container">
-      <VueFlow
-        v-model="elements"
-        :default-zoom="1"
-        :min-zoom="0.2"
-        :max-zoom="4"
-        @node-click="onNodeClick"
-        @edge-click="onEdgeClick"
-        @connect="onConnect"
+    <section class="flow-main">
+      <header class="flow-toolbar">
+        <div class="flow-toolbar__left">
+          <h3 class="flow-toolbar__title">Редактор диалога</h3>
+          <span class="flow-toolbar__subtitle">
+            {{ npcName }}
+          </span>
+        </div>
+        <div class="flow-toolbar__center">
+          <button type="button" class="flow-toolbar__btn" @click="fitToView">
+            ◉ Fit
+          </button>
+          <button type="button" class="flow-toolbar__btn" @click="resetPosition">
+            ↺ Reset
+          </button>
+      </div>
+        <div class="flow-toolbar__actions">
+          <span class="flow-toolbar__status" :class="{ 'flow-toolbar__status--dirty': isDirty }">
+            {{ isDirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены' }}
+          </span>
+          <button
+            type="button"
+            class="flow-toolbar__btn flow-toolbar__btn--primary"
+            :disabled="isSaving"
+            @click="saveGraph"
+          >
+            {{ isSaving ? 'Сохранение…' : 'Сохранить' }}
+          </button>
+    </div>
+      </header>
+
+      <div
+        ref="canvasRef"
+        class="flow-canvas"
+        @dragover.prevent="handleDragOver"
+        @drop="handleDrop"
       >
-        <Background pattern-color="#aaa" :gap="16" />
-        <Controls />
-        <MiniMap />
+        <VueFlow
+          class="flow-canvas__inner"
+          v-model:nodes="nodes"
+          v-model:edges="edges"
+          :node-types="nodeTypes"
+          :default-edge-options="defaultEdgeOptions"
+          :min-zoom="0.2"
+          :max-zoom="2"
+          @pane-click="clearSelection"
+          @node-click="handleNodeClick"
+          @edge-click="handleEdgeClick"
+          @connect="handleConnect"
+          @pane-ready="handlePaneReady"
+        >
+          <Background pattern-color="#bfc4ff" :gap="24" />
+          <Controls position="top-left" />
+          <MiniMap pannable zoomable />
       </VueFlow>
-    </div>
 
-    <div v-if="selectedNode" class="node-properties">
-      <h4>Node Properties</h4>
-      <div class="property">
-        <label>Type:</label>
-        <select v-model="selectedNode.data.nodeType">
-          <option value="start">Start</option>
-          <option value="dialog">Dialog</option>
-          <option value="choice">Choice</option>
-          <option value="action">Action</option>
-          <option value="end">End</option>
-        </select>
+        <div v-if="isLoading" class="flow-overlay">
+          <div class="flow-overlay__spinner" />
+          <p>Загружаем диалог…</p>
       </div>
-      <div class="property">
-        <label>Text:</label>
-        <textarea v-model="selectedNode.data.text" rows="4"></textarea>
       </div>
-      <div class="property">
-        <label>Conditions (JSON):</label>
-        <textarea v-model="selectedNode.data.conditions" rows="3" placeholder='{"level": 5}'></textarea>
-      </div>
-      <button @click="deleteNode" class="btn-delete">Delete Node</button>
-    </div>
+
+      <transition-group name="toast" tag="div" class="flow-toast-list">
+        <article
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="flow-toast"
+          :class="`flow-toast--${notification.type}`"
+        >
+          <strong class="flow-toast__title">
+            {{ notification.type === 'error' ? 'Ошибка' : 'Готово' }}
+          </strong>
+          <p class="flow-toast__message">{{ notification.message }}</p>
+        </article>
+      </transition-group>
+    </section>
+
+    <PropertiesPanel
+      :node="selectedNode"
+      :edge="selectedEdge"
+      :outgoing-edges="outgoingEdges"
+      :node-type-options="nodeTypeOptions"
+      :node-errors="selectedNode?.errorState || {}"
+      :edge-errors="selectedEdge?.errorState || {}"
+      context="dialog"
+      @delete-node="deleteNode"
+      @delete-edge="deleteEdge"
+      @duplicate-node="duplicateNode"
+      @select-edge="selectEdge"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { VueFlow } from '@vue-flow/core';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
@@ -63,235 +112,665 @@ import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
 
-const elements = ref([]);
-const selectedNode = ref(null);
-const nodeIdCounter = ref(1);
+import Palette from './flow/Palette.vue';
+import PropertiesPanel from './flow/PropertiesPanel.vue';
+import LogicNode from './flow/LogicNode.vue';
+import {
+  normalizeDialogGraph,
+  serializeDialogGraph,
+  GraphValidationError,
+} from './flow/utils/serialization';
+
+const nodeTypes = {
+  'logic-node': LogicNode,
+};
+
+const defaultEdgeOptions = {
+  type: 'smoothstep',
+  markerEnd: 'arrowclosed',
+};
+
+const NODE_META = {
+  start: { label: 'Старт', icon: '🚀', description: 'Начальное сообщение NPC' },
+  dialog: { label: 'Диалог', icon: '💬', description: 'Фраза NPC или реплика игрока' },
+  choice: { label: 'Выбор', icon: '🔀', description: 'Ветка выбора игрока' },
+  action: { label: 'Действие', icon: '⚙️', description: 'Запуск действий/скриптов' },
+  condition: { label: 'Условие', icon: '🛡', description: 'Проверка требований' },
+  end: { label: 'Завершение', icon: '🏁', description: 'Конец диалога' },
+};
+
+const paletteItems = Object.entries(NODE_META).map(([type, meta]) => ({
+  type,
+  label: meta.label,
+  icon: meta.icon,
+  description: meta.description,
+}));
+
+const nodeTypeOptions = Object.entries(NODE_META).map(([value, meta]) => ({
+  value,
+  label: meta.label,
+}));
+
+const nodes = ref([]);
+const edges = ref([]);
+const notifications = ref([]);
+const isLoading = ref(false);
+const isSaving = ref(false);
+const isDirty = ref(false);
+
+const selectedNodeId = ref(null);
+const selectedEdgeId = ref(null);
+
+const draggedType = ref(null);
+const canvasRef = ref(null);
+
+const tempNodeCounter = ref(1);
+const tempEdgeCounter = ref(1);
+
+const npcName = computed(() => window.npcData?.name || 'NPC');
+
+const { project, fitView, setViewport, getViewport } = useVueFlow();
+
+const selectedNode = computed(() => nodes.value.find((node) => node.id === selectedNodeId.value) || null);
+const selectedEdge = computed(() => edges.value.find((edge) => edge.id === selectedEdgeId.value) || null);
+
+const outgoingEdges = computed(() =>
+  selectedNode.value
+    ? edges.value.filter((edge) => edge.source === selectedNode.value.id)
+    : []
+);
+
+const notificationsTimers = new Map();
+
+let hydrating = false;
 
 onMounted(async () => {
-  if (window.npcData) {
+  window.addEventListener('keydown', handleShortcuts);
     await loadGraph();
-  }
 });
 
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleShortcuts);
+  notificationsTimers.forEach((timer) => clearTimeout(timer));
+  notificationsTimers.clear();
+});
+
+watch(
+  [nodes, edges],
+  () => {
+    if (hydrating) {
+      return;
+    }
+    isDirty.value = true;
+  },
+  { deep: true }
+);
+
+watch(
+  edges,
+  () => {
+    edges.value.forEach((edge) => {
+      edge.label = edge.data?.label || '';
+    });
+  },
+  { deep: true }
+);
+
 async function loadGraph() {
+  isLoading.value = true;
+  hydrating = true;
   try {
     const response = await axios.get(`/api/npcs/${window.npcData.id}`);
-    const npc = response.data;
-
-    const nodes = npc.nodes.map(node => ({
-      id: `${node.id}`,
-      type: 'default',
-      position: { x: node.positionX || 0, y: node.positionY || 0 },
-      data: {
-        label: node.text || node.type,
-        nodeType: node.type,
-        text: node.text,
-        conditions: JSON.stringify(node.conditions || {})
-      }
-    }));
-
-    const edges = [];
-    npc.nodes.forEach(node => {
-      node.connections.forEach(conn => {
-        edges.push({
-          id: `e${node.id}-${conn.targetNodeId}`,
-          source: `${node.id}`,
-          target: `${conn.targetNodeId}`,
-          label: conn.choiceText,
-          data: {
-            conditions: conn.conditions
-          }
-        });
-      });
-    });
-
-    elements.value = [...nodes, ...edges];
+    const { nodes: loadedNodes, edges: loadedEdges } = normalizeDialogGraph(response.data);
+    nodes.value = loadedNodes.map(enhanceNode);
+    edges.value = loadedEdges.map(enhanceEdge);
+    bumpCounters();
+    await nextTickFitView();
+    isDirty.value = false;
   } catch (error) {
-    console.error('Failed to load graph:', error);
+    console.error('Не удалось загрузить граф NPC:', error);
+    notify('error', 'Не удалось загрузить диалог NPC');
+  } finally {
+    hydrating = false;
+    isLoading.value = false;
   }
 }
 
-function addNode(type) {
-  const newNode = {
-    id: `new-${nodeIdCounter.value++}`,
-    type: 'default',
-    position: { x: Math.random() * 400, y: Math.random() * 400 },
+function enhanceNode(node) {
+  return {
+    ...node,
+    errorState: {},
     data: {
-      label: type,
-      nodeType: type,
-      text: '',
-      conditions: '{}'
-    }
+      nodeType: node.data?.nodeType || 'dialog',
+      title: node.data?.title || NODE_META[node.data?.nodeType || 'dialog']?.label || 'Узел',
+      body: node.data?.body || '',
+      conditions: node.data?.conditions || '',
+    },
   };
-
-  elements.value.push(newNode);
 }
 
-function onNodeClick(event) {
-  selectedNode.value = event.node;
-}
-
-function onEdgeClick(event) {
-  // Handle edge selection if needed
-}
-
-function onConnect(params) {
-  const newEdge = {
-    ...params,
-    id: `e${params.source}-${params.target}`,
-    label: 'Choice',
-    data: { conditions: null }
+function enhanceEdge(edge) {
+  return {
+    ...edge,
+    errorState: {},
+    data: {
+      label: edge.data?.label || edge.label || '',
+      conditions: edge.data?.conditions || '',
+    },
   };
-  elements.value.push(newEdge);
 }
 
-function deleteNode() {
-  if (selectedNode.value) {
-    const nodeId = selectedNode.value.id;
-    // Remove the node and all connected edges
-    elements.value = elements.value.filter(el => {
-      // Remove the node itself
-      if (el.id === nodeId) return false;
-      // Remove edges connected to this node
-      if (el.source === nodeId || el.target === nodeId) return false;
-      return true;
-    });
-    selectedNode.value = null;
+function bumpCounters() {
+  const numericNodeIds = nodes.value
+    .map((node) => Number(node.id))
+    .filter((value) => Number.isFinite(value));
+  const numericEdgeIds = edges.value
+    .map((edge) => Number(edge.id))
+    .filter((value) => Number.isFinite(value));
+
+  const maxNodeId = numericNodeIds.length ? Math.max(...numericNodeIds) : 0;
+  const maxEdgeId = numericEdgeIds.length ? Math.max(...numericEdgeIds) : 0;
+
+  tempNodeCounter.value = Math.max(tempNodeCounter.value, maxNodeId + 1);
+  tempEdgeCounter.value = Math.max(tempEdgeCounter.value, maxEdgeId + 1);
+}
+
+function handleAddFromPalette(item) {
+  addNode(item.type);
+}
+
+function handleDragFromPalette({ event, item }) {
+  draggedType.value = item.type;
+  event.dataTransfer.setData('application/x-flow-node', item.type);
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'copy';
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  const type =
+    event.dataTransfer.getData('application/x-flow-node') ||
+    draggedType.value ||
+    'dialog';
+  const position = projectPosition(event.clientX, event.clientY);
+  addNode(type, position);
+  draggedType.value = null;
+}
+
+function projectPosition(x, y) {
+  if (typeof project === 'function') {
+    return project({ x, y });
   }
+  return { x: 0, y: 0 };
+}
+
+function addNode(type, position = null) {
+  if (type === 'start' && nodes.value.some((node) => node.data?.nodeType === 'start')) {
+    notify('error', 'Стартовый узел уже существует');
+    return;
+  }
+
+  const meta = NODE_META[type] || NODE_META.dialog;
+  const id = generateNodeId();
+  const defaultPosition = position || getDefaultPosition();
+
+  const node = {
+    id,
+    type: 'logic-node',
+    position: defaultPosition,
+    data: {
+      nodeType: type,
+      title: meta.label,
+      body: '',
+      conditions: '',
+    },
+    errorState: {},
+  };
+
+  nodes.value = [...nodes.value, node];
+  selectedNodeId.value = id;
+  selectedEdgeId.value = null;
+}
+
+function getDefaultPosition() {
+  if (typeof getViewport === 'function') {
+    const viewport = getViewport();
+    const centerX = viewport ? -viewport.x / viewport.zoom + 200 : 200;
+    const centerY = viewport ? -viewport.y / viewport.zoom + 200 : 200;
+    return { x: centerX + Math.random() * 40, y: centerY + Math.random() * 40 };
+  }
+
+  return { x: Math.random() * 400, y: Math.random() * 400 };
+}
+
+function handleNodeClick({ node }) {
+  selectedNodeId.value = node.id;
+  selectedEdgeId.value = null;
+}
+
+function handleEdgeClick({ edge }) {
+  selectedEdgeId.value = edge.id;
+  selectedNodeId.value = null;
+}
+
+function handleConnect(connection) {
+  const edge = {
+    id: generateEdgeId(),
+    type: 'logic-edge',
+    source: connection.source,
+    target: connection.target,
+    data: {
+      label: 'Новый выбор',
+      conditions: '',
+    },
+    errorState: {},
+  };
+
+  edges.value = [...edges.value, edge];
+  selectedEdgeId.value = edge.id;
+}
+
+function deleteNode(node) {
+  const nodeId = typeof node === 'string' ? node : node?.id;
+  if (!nodeId) return;
+
+  nodes.value = nodes.value.filter((item) => item.id !== nodeId);
+  edges.value = edges.value.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+
+  if (selectedNodeId.value === nodeId) {
+    selectedNodeId.value = null;
+  }
+  selectedEdgeId.value = null;
+}
+
+function deleteEdge(edge) {
+  const edgeId = typeof edge === 'string' ? edge : edge?.id;
+  if (!edgeId) return;
+
+  edges.value = edges.value.filter((item) => item.id !== edgeId);
+  if (selectedEdgeId.value === edgeId) {
+    selectedEdgeId.value = null;
+  }
+}
+
+function duplicateNode(node) {
+  if (!node) return;
+
+  const id = generateNodeId();
+  const offset = { x: node.position.x + 60, y: node.position.y + 60 };
+  const clone = {
+    id,
+    type: 'logic-node',
+    position: offset,
+    data: {
+      nodeType: node.data?.nodeType || 'dialog',
+      title: `${node.data?.title || 'Узел'} (копия)`,
+      body: node.data?.body || '',
+      conditions: node.data?.conditions || '',
+    },
+    errorState: {},
+  };
+
+  nodes.value = [...nodes.value, clone];
+  selectedNodeId.value = id;
+  selectedEdgeId.value = null;
+}
+
+function selectEdge(edge) {
+  selectedEdgeId.value = edge?.id || null;
+  selectedNodeId.value = null;
+}
+
+function clearSelection() {
+  selectedNodeId.value = null;
+  selectedEdgeId.value = null;
 }
 
 async function saveGraph() {
+  clearErrors();
+  isSaving.value = true;
+
   try {
-    const nodes = elements.value.filter(el => !el.source);
-    const edges = elements.value.filter(el => el.source);
-
-    // Parse and validate conditions JSON
-    const parseConditions = (conditionsStr) => {
-      try {
-        return JSON.parse(conditionsStr || '{}');
-      } catch (e) {
-        console.warn('Invalid JSON in conditions:', conditionsStr);
-        return {};
-      }
-    };
-
+    const payload = serializeDialogGraph(nodes.value, edges.value);
     await axios.put(`/api/npcs/${window.npcData.id}/nodes`, {
-      nodes: nodes.map(n => ({
-        id: n.id,
-        type: n.data.nodeType,
-        text: n.data.text,
-        conditions: parseConditions(n.data.conditions),
-        positionX: n.position.x,
-        positionY: n.position.y
+      nodes: payload.nodes.map((node) => ({
+        id: node.id,
+        clientId: node.clientId,
+        type: node.type,
+        text: node.text,
+        positionX: node.positionX,
+        positionY: node.positionY,
+        conditions: node.conditions,
       })),
-      connections: edges.map(e => ({
-        sourceId: e.source,
-        targetId: e.target,
-        choiceText: e.label,
-        conditions: e.data.conditions
-      }))
+      connections: payload.edges.map((edge) => ({
+        id: edge.id,
+        clientId: edge.clientId,
+        sourceId: edge.sourceId,
+        targetId: edge.targetId,
+        choiceText: edge.choiceText,
+        conditions: edge.conditions,
+      })),
     });
 
-    alert('Graph saved successfully!');
+    await loadGraph();
+    isDirty.value = false;
+    notify('success', 'Диалог успешно сохранён');
   } catch (error) {
-    console.error('Failed to save graph:', error);
-    alert('Failed to save graph: ' + (error.response?.data?.error || error.message));
+    handleSaveError(error);
+  } finally {
+    isSaving.value = false;
   }
+}
+
+function handleSaveError(error) {
+  if (error instanceof GraphValidationError) {
+    applyValidationError(error.meta);
+    notify('error', error.message);
+    return;
+  }
+
+  if (error?.response?.data?.error) {
+    notify('error', error.response.data.error);
+    return;
+  }
+
+  notify('error', error.message || 'Не удалось сохранить диалог');
+}
+
+function applyValidationError(meta = {}) {
+  if (meta.entity === 'node') {
+    const node = nodes.value.find((item) => item.id === meta.id);
+    if (node) {
+      node.errorState = { ...node.errorState, [meta.field]: meta.message };
+      selectedNodeId.value = node.id;
+    }
+  }
+
+  if (meta.entity === 'edge') {
+    const edge = edges.value.find((item) => item.id === meta.id);
+    if (edge) {
+      edge.errorState = { ...edge.errorState, [meta.field]: meta.message };
+      selectedEdgeId.value = edge.id;
+    }
+  }
+}
+
+function clearErrors() {
+  nodes.value = nodes.value.map((node) => ({
+    ...node,
+    errorState: {},
+  }));
+  edges.value = edges.value.map((edge) => ({
+    ...edge,
+    errorState: {},
+  }));
+}
+
+function fitToView() {
+  if (typeof fitView === 'function') {
+    fitView({ padding: 0.18, includeHiddenNodes: true });
+  }
+}
+
+function resetPosition() {
+  if (typeof setViewport === 'function') {
+    setViewport({ x: 0, y: 0, zoom: 1 });
+  }
+}
+
+function handlePaneReady() {
+  nextTickFitView();
+}
+
+async function nextTickFitView() {
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  fitToView();
+}
+
+function handleShortcuts(event) {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+    event.preventDefault();
+    saveGraph();
+    return;
+  }
+
+  if (event.key === 'Delete') {
+    if (selectedNode.value) {
+      deleteNode(selectedNode.value);
+      event.preventDefault();
+    } else if (selectedEdge.value) {
+      deleteEdge(selectedEdge.value);
+      event.preventDefault();
+    }
+  }
+
+  if ((event.metaKey || event.ctrlKey) && event.key === '0') {
+    event.preventDefault();
+    fitToView();
+  }
+}
+
+function notify(type, message) {
+  const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  notifications.value.push({ id, type, message });
+  const timer = setTimeout(() => removeNotification(id), 4200);
+  notificationsTimers.set(id, timer);
+}
+
+function removeNotification(id) {
+  notifications.value = notifications.value.filter((item) => item.id !== id);
+  if (notificationsTimers.has(id)) {
+    clearTimeout(notificationsTimers.get(id));
+    notificationsTimers.delete(id);
+  }
+}
+
+function generateNodeId() {
+  const id = `temp-${tempNodeCounter.value++}`;
+  return id;
+}
+
+function generateEdgeId() {
+  const id = `temp-edge-${tempEdgeCounter.value++}`;
+  return id;
 }
 </script>
 
 <style scoped>
-.npc-editor {
+.flow-shell {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0;
+  height: 680px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 24px 60px rgba(45, 65, 132, 0.2);
+}
+
+.flow-main {
   display: flex;
   flex-direction: column;
-  height: 600px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
+  background: linear-gradient(180deg, rgba(242, 246, 255, 0.95), rgba(235, 239, 255, 0.9));
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
+.flow-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  padding: 15px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  gap: 18px;
 }
 
-.editor-header h3 {
-  margin: 0;
-  color: #667eea;
-}
-
-.actions {
+.flow-toolbar__left {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flow-toolbar__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #28346d;
+}
+
+.flow-toolbar__subtitle {
+  font-size: 13px;
+  color: rgba(40, 52, 109, 0.6);
+}
+
+.flow-toolbar__center {
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.btn-add, .btn-save {
+.flow-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.flow-toolbar__btn {
   padding: 8px 16px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-add:hover, .btn-save:hover {
-  background: #5568d3;
-}
-
-.editor-container {
-  flex: 1;
-  position: relative;
-}
-
-.node-properties {
-  padding: 15px;
-  background: #f8f9fa;
-  border-top: 1px solid #ddd;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.node-properties h4 {
-  margin-top: 0;
-  color: #667eea;
-}
-
-.property {
-  margin-bottom: 15px;
-}
-
-.property label {
-  display: block;
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.35);
+  background: rgba(255, 255, 255, 0.8);
+  color: #404b8c;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.property select,
-.property textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: inherit;
-}
-
-.btn-delete {
-  padding: 8px 16px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
 }
 
-.btn-delete:hover {
-  background: #c82333;
+.flow-toolbar__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(102, 126, 234, 0.25);
+}
+
+.flow-toolbar__btn--primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 12px 24px rgba(118, 75, 162, 0.25);
+}
+
+.flow-toolbar__btn--primary:disabled {
+  opacity: 0.65;
+  cursor: progress;
+  box-shadow: none;
+}
+
+.flow-toolbar__status {
+  font-size: 12px;
+  color: rgba(40, 52, 109, 0.6);
+}
+
+.flow-toolbar__status--dirty {
+  color: #c53030;
+  font-weight: 600;
+}
+
+.flow-canvas {
+  position: relative;
+  flex: 1;
+}
+
+.flow-canvas__inner {
+  width: 100%;
+  height: 100%;
+}
+
+.flow-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #404b8c;
+  z-index: 10;
+}
+
+.flow-overlay__spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 4px solid rgba(102, 126, 234, 0.2);
+  border-top-color: #667eea;
+  animation: spin 1s linear infinite;
+}
+
+.flow-toast-list {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.flow-toast {
+  min-width: 260px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(102, 126, 234, 0.18);
+  box-shadow: 0 16px 28px rgba(45, 65, 132, 0.22);
+}
+
+.flow-toast__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flow-toast__message {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(31, 42, 86, 0.8);
+}
+
+.flow-toast--error {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.95);
+}
+
+.flow-toast--success {
+  border-color: rgba(56, 161, 105, 0.18);
+  background: rgba(237, 247, 243, 0.95);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

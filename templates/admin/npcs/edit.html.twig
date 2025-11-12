@@ -25,5 +25,5 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ asset('build/npc-editor.js') }}" defer></script>
+    <script type="module" src="{{ asset('build/npc-editor.js') }}"></script>
 {% endblock %}

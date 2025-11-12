@@ -116,6 +116,8 @@ docker-compose exec php php bin/console doctrine:fixtures:load --no-interaction
 - Графический редактор диалоговых деревьев
 - Поддержка условий для диалогов
 - Различные типы узлов: start, dialog, choice, action, end
+- Палитра готовых узлов с drag-and-drop и горячими клавишами (`Cmd/Ctrl+S`, `Delete`, `Cmd/Ctrl+0`)
+- Панель свойств с валидацией JSON и подсветкой ошибок, toast-уведомления при сохранении
 
 ### 2. Управление квестами
 
@@ -123,6 +125,8 @@ docker-compose exec php php bin/console doctrine:fixtures:load --no-interaction
 - Визуальный редактор логики квеста
 - Поддержка условий и требований
 - Типы узлов: start, objective, condition, reward, end
+- JSON-редактор данных узлов с предпросмотром и подсветкой проблем
+- Единый UX с возможностью fit-to-view, reset viewport и контекстными подсказками
 
 ### 3. GraphQL API
 

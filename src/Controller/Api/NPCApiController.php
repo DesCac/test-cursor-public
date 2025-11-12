@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\DialogConnection;
 use App\Entity\DialogNode;
 use App\Entity\NPC;
 use Doctrine\ORM\EntityManagerInterface;
@@ -65,10 +66,115 @@ class NPCApiController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // This would handle updating the dialog graph structure
-        // For now, it's a placeholder
+        if (!is_array($data)) {
+            return $this->json(['error' => 'Invalid JSON in request body'], Response::HTTP_BAD_REQUEST);
+        }
 
-        return $this->json(['success' => true]);
+        $nodesPayload = $data['nodes'] ?? [];
+        $connectionsPayload = $data['connections'] ?? [];
+
+        if (!is_array($nodesPayload)) {
+            return $this->json(['error' => 'Field "nodes" must be an array'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $existingNodes = [];
+        foreach ($npc->getDialogNodes() as $nodeEntity) {
+            if ($nodeEntity->getId() !== null) {
+                $existingNodes[$nodeEntity->getId()] = $nodeEntity;
+            }
+        }
+
+        $clientNodeMap = [];
+        $processedNodes = [];
+
+        foreach ($nodesPayload as $nodePayload) {
+            if (!is_array($nodePayload)) {
+                continue;
+            }
+
+            $nodeId = isset($nodePayload['id']) ? (int) $nodePayload['id'] : null;
+            $clientId = (string) ($nodePayload['clientId'] ?? ($nodeId ?? uniqid('node_', true)));
+
+            if ($nodeId !== null && isset($existingNodes[$nodeId])) {
+                $dialogNode = $existingNodes[$nodeId];
+            } else {
+                $dialogNode = new DialogNode();
+                $dialogNode->setNpc($npc);
+                $em->persist($dialogNode);
+            }
+
+            $dialogNode->setNodeType((string) ($nodePayload['type'] ?? 'dialog'));
+            $dialogNode->setText($nodePayload['text'] ?? null);
+            $dialogNode->setConditions($this->normalizeArray($nodePayload['conditions'] ?? null));
+            $dialogNode->setPositionX(isset($nodePayload['positionX']) ? (float) $nodePayload['positionX'] : null);
+            $dialogNode->setPositionY(isset($nodePayload['positionY']) ? (float) $nodePayload['positionY'] : null);
+
+            $clientNodeMap[$clientId] = $dialogNode;
+
+            if ($dialogNode->getId() !== null) {
+                $clientNodeMap[(string) $dialogNode->getId()] = $dialogNode;
+            }
+
+            $processedNodes[] = $dialogNode;
+        }
+
+        foreach ($npc->getDialogNodes() as $dialogNode) {
+            if (!in_array($dialogNode, $processedNodes, true)) {
+                $npc->removeDialogNode($dialogNode);
+                $em->remove($dialogNode);
+            }
+        }
+
+        foreach ($npc->getDialogNodes() as $dialogNode) {
+            foreach ($dialogNode->getOutgoingConnections() as $connection) {
+                $em->remove($connection);
+            }
+        }
+
+        $em->flush();
+
+        // refresh client map with generated IDs
+        foreach ($clientNodeMap as $clientId => $dialogNode) {
+            if ($dialogNode->getId() !== null) {
+                $clientNodeMap[(string) $dialogNode->getId()] = $dialogNode;
+            }
+        }
+
+        if (is_array($connectionsPayload)) {
+            foreach ($connectionsPayload as $connectionPayload) {
+                if (!is_array($connectionPayload)) {
+                    continue;
+                }
+
+                $sourceKey = (string) ($connectionPayload['sourceId'] ?? '');
+                $targetKey = (string) ($connectionPayload['targetId'] ?? '');
+
+                if ($sourceKey === '' || $targetKey === '') {
+                    continue;
+                }
+
+                if (!isset($clientNodeMap[$sourceKey], $clientNodeMap[$targetKey])) {
+                    continue;
+                }
+
+                /** @var DialogNode $sourceNode */
+                $sourceNode = $clientNodeMap[$sourceKey];
+                /** @var DialogNode $targetNode */
+                $targetNode = $clientNodeMap[$targetKey];
+
+                $connection = new DialogConnection();
+                $connection->setSourceNode($sourceNode);
+                $connection->setTargetNode($targetNode);
+                $connection->setChoiceText($connectionPayload['choiceText'] ?? null);
+                $connection->setConditions($this->normalizeArray($connectionPayload['conditions'] ?? null));
+
+                $em->persist($connection);
+            }
+        }
+
+        $em->flush();
+
+        return $this->json($this->serializeNPC($npc));
     }
 
     /**
@@ -113,5 +219,26 @@ class NPCApiController extends AbstractController
             'positionY' => $node->getPositionY(),
             'connections' => $connections,
         ];
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<string, mixed>|null
+     */
+    private function normalizeArray(mixed $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if ($value === []) {
+            return null;
+        }
+
+        return $value;
     }
 }

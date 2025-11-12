@@ -25,5 +25,5 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ asset('build/quest-editor.js') }}" defer></script>
+    <script type="module" src="{{ asset('build/quest-editor.js') }}"></script>
 {% endblock %}
