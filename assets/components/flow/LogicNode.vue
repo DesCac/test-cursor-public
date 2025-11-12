@@ -78,7 +78,7 @@ const handleClass = computed(() => [
 ]);
 </script>
 
-<style scoped>
+<style>
 .logic-node {
   position: relative;
   width: 240px;

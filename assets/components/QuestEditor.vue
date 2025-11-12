@@ -626,7 +626,7 @@ function generateEdgeId() {
 }
 </script>
 
-<style scoped>
+<style>
 .flow-shell {
   display: grid;
   grid-template-columns: auto 1fr auto;

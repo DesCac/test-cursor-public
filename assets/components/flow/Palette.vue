@@ -85,7 +85,7 @@ function handleAdd(item) {
 }
 </script>
 
-<style scoped>
+<style>
 .flow-palette {
   display: flex;
   flex-direction: column;

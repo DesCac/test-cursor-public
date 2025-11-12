@@ -2,6 +2,19 @@ body {
     background-color: lightgray;
 }
 
+/* Force node visibility - DEBUG */
+.vue-flow__node {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+}
+
+.vue-flow__node .logic-node {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 /* VueFlow Global Styles */
 .vue-flow {
     background: #f8fafc !important;
