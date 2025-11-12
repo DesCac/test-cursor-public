@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Skills - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>🧠 Skill Tree</h2>
+    <button class="btn" onclick="alert('Создание нового навыка доступно в редакторе дерева')">+ Новый навык</button>
+</div>
+
+{% if skills is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">Навыки ещё не созданы. Добавьте первый навык через редактор дерева.</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Slug</th>
+                <th>Требуемый уровень</th>
+                <th>Необходимые классы</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for skill in skills %}
+            <tr>
+                <td>{{ skill.id }}</td>
+                <td><strong>{{ skill.name }}</strong></td>
+                <td><code>{{ skill.slug }}</code></td>
+                <td>{{ skill.requiredLevel|default('—') }}</td>
+                <td>
+                    {% if skill.requiredClasses|length > 0 %}
+                        {% set classNames = [] %}
+                        {% for class in skill.requiredClasses %}
+                            {% set classNames = classNames|merge([class.name]) %}
+                        {% endfor %}
+                        {{ classNames|join(', ') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ path('admin_skills_edit', {id: skill.id}) }}" class="btn" style="padding: 6px 12px; font-size: 14px;">
+                        Открыть редактор
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
