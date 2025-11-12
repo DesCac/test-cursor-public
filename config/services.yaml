@@ -20,3 +20,4 @@ services:
 
     App\GraphQL\Resolver\:
         resource: '../src/GraphQL/Resolver/'
+        public: true

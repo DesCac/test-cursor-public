@@ -76,22 +76,48 @@ query GetNPC {
     description
     dialogNodes {
       id
-      type
+      nodeType
       text
+      conditions
+      positionX
+      positionY
+      connections {
+        id
+        choiceText
+        conditions
+        targetNode {
+          id
+          nodeType
+        }
+      }
     }
   }
 }
 
-# Получить конкретный квест
+# Получить конкретный квест с логическими узлами
 query GetQuest {
   quest(id: 1) {
     id
     name
     description
-    questNodes {
+    objectives
+    rewards
+    requirements
+    logicNodes {
       id
-      type
-      title
+      nodeType
+      data
+      conditions
+      positionX
+      positionY
+      connections {
+        id
+        conditions
+        targetNode {
+          id
+          nodeType
+        }
+      }
     }
   }
 }
