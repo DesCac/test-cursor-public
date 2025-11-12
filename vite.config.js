@@ -17,17 +17,17 @@ export default defineConfig(({ mode }) => ({
     // В development режиме отключаем минификацию
     minify: mode === 'production',
     rollupOptions: {
-      input: {
-        'npc-editor': resolve(__dirname, 'assets/npc-editor.js'),
-        'quest-editor': resolve(__dirname, 'assets/quest-editor.js'),
-      },
+        input: {
+          'npc-editor': resolve(__dirname, 'assets/npc-editor.js'),
+          'quest-editor': resolve(__dirname, 'assets/quest-editor.js'),
+          'skill-editor': resolve(__dirname, 'assets/skill-editor.js'),
+        },
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: '[name].js',
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name.endsWith('.css')) {
-            // Извлекаем имя entry point из имени файла
-            const match = assetInfo.name.match(/npc-editor|quest-editor/);
+            if (assetInfo.name.endsWith('.css')) {
+              const match = assetInfo.name.match(/npc-editor|quest-editor|skill-editor/);
             if (match) {
               return `${match[0]}.css`;
             }

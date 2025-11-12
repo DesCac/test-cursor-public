@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Classes - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>🛡️ Классы персонажей</h2>
+    <a class="btn" href="{{ path('admin_skills_list') }}">К дереву скиллов</a>
+</div>
+
+{% if classes is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">Классы пока не добавлены.</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Родитель</th>
+                <th>Наследники</th>
+                <th>Скиллов привязано</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for class in classes %}
+            <tr>
+                <td>{{ class.id }}</td>
+                <td><strong>{{ class.name }}</strong></td>
+                <td>{{ class.parent ? class.parent.name : '—' }}</td>
+                <td>{{ class.children|length }}</td>
+                <td>{{ class.skills|length }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}

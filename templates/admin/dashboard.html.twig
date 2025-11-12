@@ -9,7 +9,7 @@
     Use the navigation above to manage your content.
 </p>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
     <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
         <h3 style="color: #667eea; margin-bottom: 10px;">📜 NPCs</h3>
         <p style="color: #666; margin-bottom: 15px;">Manage non-player characters and their dialog trees</p>
@@ -27,5 +27,23 @@
         <p style="color: #666; margin-bottom: 15px;">Explore the GraphQL API</p>
         <a href="/graphiql.html" target="_blank" class="btn" style="background: #f093fb;">Open Explorer</a>
     </div>
+
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #34d399;">
+            <h3 style="color: #10b981; margin-bottom: 10px;">🧠 Skills</h3>
+            <p style="color: #666; margin-bottom: 15px;">Build and visualise the character skill tree</p>
+            <a href="{{ path('admin_skills_list') }}" class="btn" style="background: #10b981;">View Skills</a>
+        </div>
+
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #facc15;">
+            <h3 style="color: #ca8a04; margin-bottom: 10px;">🏹 Classes</h3>
+            <p style="color: #666; margin-bottom: 15px;">Review class lineage and unlock paths</p>
+            <a href="{{ path('admin_classes_list') }}" class="btn" style="background: #ca8a04;">View Classes</a>
+        </div>
+
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #60a5fa;">
+            <h3 style="color: #2563eb; margin-bottom: 10px;">🧑‍🚀 Players</h3>
+            <p style="color: #666; margin-bottom: 15px;">Inspect players, characters, and unlocked skills</p>
+            <a href="{{ path('admin_players_list') }}" class="btn" style="background: #2563eb;">View Players</a>
+        </div>
 </div>
 {% endblock %}

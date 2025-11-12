@@ -20,6 +20,24 @@ Query:
             quests:
                 type: "[Quest!]!"
                 resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\QuestResolver').resolveAll()"
+              player:
+                  type: "Player"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerResolver').resolve(args['id'])"
+              players:
+                  type: "[Player!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerResolver').resolveAll()"
+              skill:
+                  type: "Skill"
+                  args:
+                      id:
+                          type: "Int!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\SkillResolver').resolve(args['id'])"
+              skills:
+                  type: "[Skill!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\SkillResolver').resolveAll()"
             validateDialogChoice:
                 type: "ValidationResult!"
                 args:
@@ -149,3 +167,87 @@ ValidationResult:
                 type: "String"
             nextNodeId:
                 type: "Int"
+  Player:
+      type: object
+      config:
+          fields:
+              id: { type: "Int!" }
+              tgUserId: { type: "String!" }
+              displayName: { type: "String" }
+              characters: { type: "[PlayerCharacter!]!" }
+
+  PlayerCharacter:
+      type: object
+      config:
+          fields:
+              id: { type: "Int!" }
+              name: { type: "String!" }
+              level: { type: "Int!" }
+              experience: { type: "Int!" }
+              player: { type: "Player!" }
+              class: { type: "PlayerClass!" }
+              completedQuests: { type: "[Quest!]!" }
+              skillProgress:
+                  type: "[CharacterSkill!]!"
+                  resolve: "@=value.getCharacterSkills()"
+              availableSkills:
+                  type: "[SkillAvailability!]!"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\PlayerResolver').resolveAvailableSkills(value)"
+
+  PlayerClass:
+      type: object
+      config:
+          fields:
+              id: { type: "Int!" }
+              name: { type: "String!" }
+              description: { type: "String" }
+              parent: { type: "PlayerClass" }
+              children: { type: "[PlayerClass!]!" }
+              skills: { type: "[Skill!]!" }
+
+  CharacterSkill:
+      type: object
+      config:
+          fields:
+              id: { type: "Int!" }
+              skill: { type: "Skill!" }
+              unlockedAt:
+                  type: "String!"
+                  resolve: "@=value.getUnlockedAt().format('c')"
+
+  Skill:
+      type: object
+      config:
+          fields:
+              id: { type: "Int!" }
+              name: { type: "String!" }
+              tier: { type: "String!" }
+              description: { type: "String" }
+              metadata:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getMetadata())"
+              extraRequirements:
+                  type: "String"
+                  resolve: "@=service('App\\\\GraphQL\\\\Resolver\\\\JsonSerializerService').serialize(value.getExtraRequirements())"
+              requiredLevel: { type: "Int" }
+              positionX: { type: "Float" }
+              positionY: { type: "Float" }
+              requiredClasses: { type: "[PlayerClass!]!" }
+              requiredQuests: { type: "[Quest!]!" }
+              prerequisites: { type: "[Skill!]!" }
+              dependents: { type: "[Skill!]!" }
+              createdAt:
+                  type: "String!"
+                  resolve: "@=value.getCreatedAt().format('c')"
+              updatedAt:
+                  type: "String!"
+                  resolve: "@=value.getUpdatedAt().format('c')"
+
+  SkillAvailability:
+      type: object
+      config:
+          fields:
+              skill: { type: "Skill!" }
+              canUnlock: { type: "Boolean!" }
+              alreadyUnlocked: { type: "Boolean!" }
+              reasons: { type: "[String!]!" }
