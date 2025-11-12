@@ -2,6 +2,11 @@
 
 {% block title %}Edit {{ npc.name }} - {{ parent() }}{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('build/npc-editor.css') }}">
+{% endblock %}
+
 {% block body %}
 <div style="margin-bottom: 20px;">
     <a href="{{ path('admin_npcs_list') }}" style="color: #667eea; text-decoration: none;">← Back to NPCs</a>

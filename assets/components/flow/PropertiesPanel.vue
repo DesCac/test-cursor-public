@@ -254,7 +254,7 @@ function handleDelete() {
 }
 </script>
 
-<style scoped>
+<style>
 .properties-panel {
   display: flex;
   flex-direction: column;
