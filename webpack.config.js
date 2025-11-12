@@ -21,6 +21,9 @@ Encore
      * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
      */
     .addEntry('app', './assets/app.js')
+    .addEntry('npc-editor', './assets/npc-editor.js')
+    .addEntry('quest-editor', './assets/quest-editor.js')
+    .addEntry('skill-editor', './assets/skill-editor.js')
 
     // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
     .splitEntryChunks()

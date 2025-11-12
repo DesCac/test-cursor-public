@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ skill.name }} - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('build/skill-editor.css') }}">
+{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 20px;">
+    <a href="{{ path('admin_skills_list') }}" style="color: #667eea; text-decoration: none;">← Back to Skills</a>
+</div>
+
+<h2>Edit Skill: {{ skill.name }}</h2>
+<p style="color: #666; margin: 10px 0;">{{ skill.description }}</p>
+
+<div id="skill-editor" style="margin-top: 30px;">
+    <!-- Vue app will be mounted here -->
+</div>
+
+<script>
+    window.skillData = {
+        id: {{ skill.id }},
+        name: "{{ skill.name|escape('js') }}",
+        description: "{{ skill.description|default('')|escape('js') }}",
+    };
+</script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="module" src="{{ asset('build/skill-editor.js') }}"></script>
+{% endblock %}

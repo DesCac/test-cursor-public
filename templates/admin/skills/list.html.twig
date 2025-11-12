@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Skills List - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>⚔️ Skills Management</h2>
+    <button class="btn" onclick="alert('Create functionality will be added in the Vue app')">+ Create New Skill</button>
+</div>
+
+{% if skills is empty %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <p style="font-size: 18px;">No skills found. Create your first skill to get started!</p>
+    </div>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Parent Skills</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for skill in skills %}
+            <tr>
+                <td>{{ skill.id }}</td>
+                <td><strong>{{ skill.name }}</strong></td>
+                <td>{{ skill.description|default('—')|slice(0, 50) }}{% if skill.description|length > 50 %}...{% endif %}</td>
+                <td>{{ skill.parents|length }}</td>
+                <td>
+                    <a href="{{ path('admin_skills_edit', {id: skill.id}) }}" class="btn" style="padding: 6px 12px; font-size: 14px;">
+                        Edit Skill Tree
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}
