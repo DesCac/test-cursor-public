@@ -1,3 +1,87 @@
-body {
-    background-color: lightgray;
+.editor-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: calc(100vh - 260px);
+}
+
+.editor-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(242, 246, 255, 0.92));
+    border: 1px solid rgba(102, 126, 234, 0.12);
+    box-shadow: 0 18px 38px rgba(40, 52, 109, 0.08);
+}
+
+.editor-page__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(102, 126, 234, 0.12);
+    color: #4c51bf;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.editor-page__back:hover {
+    background: rgba(102, 126, 234, 0.18);
+    transform: translateY(-1px);
+}
+
+.editor-page__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #1f2a56;
+}
+
+.editor-page__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.editor-page__subtitle {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #4c51bf;
+}
+
+.editor-page__description {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(31, 42, 86, 0.7);
+}
+
+.editor-page__workspace {
+    position: relative;
+    flex: 1;
+    min-height: 720px;
+    display: flex;
+}
+
+#dialog-editor {
+    flex: 1;
+    display: flex;
+    min-height: inherit;
+}
+
+@media (max-width: 1280px) {
+    .editor-page {
+        min-height: calc(100vh - 220px);
+    }
+
+    .editor-page__workspace {
+        min-height: 600px;
+    }
 }

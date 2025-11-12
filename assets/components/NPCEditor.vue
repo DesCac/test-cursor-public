@@ -1,10 +1,12 @@
 <template>
   <div class="flow-shell">
-    <Palette
-      :items="paletteItems"
-      @add-node="handleAddFromPalette"
-      @drag-node="handleDragFromPalette"
-    />
+    <div class="flow-shell__palette">
+      <Palette
+        :items="paletteItems"
+        @add-node="handleAddFromPalette"
+        @drag-node="handleDragFromPalette"
+      />
+    </div>
 
     <section class="flow-main">
       <header class="flow-toolbar">
@@ -15,13 +17,32 @@
           </span>
         </div>
         <div class="flow-toolbar__center">
-          <button type="button" class="flow-toolbar__btn" @click="fitToView">
-            ◉ Fit
+          <div class="flow-toolbar__group">
+            <button
+              type="button"
+              class="flow-toolbar__btn flow-toolbar__btn--ghost"
+              aria-label="Уменьшить масштаб"
+              @click="handleZoomOut"
+            >
+              −
+            </button>
+            <span class="flow-toolbar__zoom">{{ zoomLabel }}</span>
+            <button
+              type="button"
+              class="flow-toolbar__btn flow-toolbar__btn--ghost"
+              aria-label="Увеличить масштаб"
+              @click="handleZoomIn"
+            >
+              +
+            </button>
+          </div>
+          <button type="button" class="flow-toolbar__btn flow-toolbar__btn--ghost" @click="fitToView">
+            ⤢ Обзор
           </button>
-          <button type="button" class="flow-toolbar__btn" @click="resetPosition">
-            ↺ Reset
+          <button type="button" class="flow-toolbar__btn flow-toolbar__btn--ghost" @click="resetPosition">
+            ⟲ Сбросить
           </button>
-      </div>
+        </div>
         <div class="flow-toolbar__actions">
           <span class="flow-toolbar__status" :class="{ 'flow-toolbar__status--dirty': isDirty }">
             {{ isDirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены' }}
@@ -34,7 +55,7 @@
           >
             {{ isSaving ? 'Сохранение…' : 'Сохранить' }}
           </button>
-    </div>
+        </div>
       </header>
 
       <div
@@ -49,23 +70,60 @@
           v-model:edges="edges"
           :node-types="nodeTypes"
           :default-edge-options="defaultEdgeOptions"
-          :min-zoom="0.2"
-          :max-zoom="2"
+          :connection-mode="connectionMode"
+          :connection-line-style="connectionLineStyle"
+          :snap-to-grid="true"
+          :snap-grid="snapGrid"
+          :pan-on-scroll="true"
+          :pan-on-drag="true"
+          :min-zoom="0.35"
+          :max-zoom="2.5"
+          :fit-view-on-init="false"
           @pane-click="clearSelection"
           @node-click="handleNodeClick"
           @edge-click="handleEdgeClick"
           @connect="handleConnect"
           @pane-ready="handlePaneReady"
         >
-          <Background pattern-color="#bfc4ff" :gap="24" />
-          <Controls position="top-left" />
-          <MiniMap pannable zoomable />
-      </VueFlow>
+          <Background pattern-color="#c7cdfb" :gap="28" />
+          <Controls
+            class="flow-controls"
+            position="bottom-left"
+            :show-fit-view="false"
+            :show-interactive="false"
+          />
+          <MiniMap class="flow-minimap" pannable zoomable />
+        </VueFlow>
+
+        <div v-if="!nodes.length && !isLoading" class="flow-empty">
+          <h4>Добавьте первый узел</h4>
+          <p>Перетащите тип из библиотеки слева или воспользуйтесь кнопками быстрого создания.</p>
+          <div class="flow-empty__actions">
+            <button type="button" class="flow-empty__cta" @click="addNode('start')">
+              Стартовый узел
+            </button>
+            <button type="button" class="flow-empty__cta flow-empty__cta--ghost" @click="addNode('dialog')">
+              Диалог
+            </button>
+          </div>
+        </div>
 
         <div v-if="isLoading" class="flow-overlay">
           <div class="flow-overlay__spinner" />
           <p>Загружаем диалог…</p>
-      </div>
+        </div>
+
+        <div class="flow-hud">
+          <button type="button" class="flow-hud__btn" @click="addNode('dialog')">
+            + Диалог
+          </button>
+          <button type="button" class="flow-hud__btn" @click="addNode('choice')">
+            + Выбор
+          </button>
+          <button type="button" class="flow-hud__btn" @click="addNode('condition')">
+            + Условие
+          </button>
+        </div>
       </div>
 
       <transition-group name="toast" tag="div" class="flow-toast-list">
@@ -83,25 +141,32 @@
       </transition-group>
     </section>
 
-    <PropertiesPanel
-      :node="selectedNode"
-      :edge="selectedEdge"
-      :outgoing-edges="outgoingEdges"
-      :node-type-options="nodeTypeOptions"
-      :node-errors="selectedNode?.errorState || {}"
-      :edge-errors="selectedEdge?.errorState || {}"
-      context="dialog"
-      @delete-node="deleteNode"
-      @delete-edge="deleteEdge"
-      @duplicate-node="duplicateNode"
-      @select-edge="selectEdge"
-    />
+    <aside class="flow-shell__properties">
+      <PropertiesPanel
+        v-if="hasSelection"
+        :node="selectedNode"
+        :edge="selectedEdge"
+        :outgoing-edges="outgoingEdges"
+        :node-type-options="nodeTypeOptions"
+        :node-errors="selectedNode?.errorState || {}"
+        :edge-errors="selectedEdge?.errorState || {}"
+        context="dialog"
+        @delete-node="deleteNode"
+        @delete-edge="deleteEdge"
+        @duplicate-node="duplicateNode"
+        @select-edge="selectEdge"
+      />
+      <div v-else class="flow-shell__properties-placeholder">
+        <h4>Нет выбранного элемента</h4>
+        <p>Выберите узел или связь, чтобы изменить содержание и условия переходов.</p>
+      </div>
+    </aside>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { VueFlow, useVueFlow } from '@vue-flow/core';
+import { VueFlow, useVueFlow, ConnectionMode } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
@@ -128,7 +193,20 @@ const nodeTypes = {
 const defaultEdgeOptions = {
   type: 'smoothstep',
   markerEnd: 'arrowclosed',
+  style: {
+    stroke: '#6b7bff',
+    strokeWidth: 2,
+  },
 };
+
+const connectionMode = ConnectionMode.Loose;
+const connectionLineStyle = {
+  stroke: '#7b6bff',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+};
+
+const snapGrid = [28, 28];
 
 const NODE_META = {
   start: { label: 'Старт', icon: '🚀', description: 'Начальное сообщение NPC' },
@@ -166,10 +244,13 @@ const canvasRef = ref(null);
 
 const tempNodeCounter = ref(1);
 const tempEdgeCounter = ref(1);
+const zoomLevel = ref(100);
+
+let stopViewportListener = null;
 
 const npcName = computed(() => window.npcData?.name || 'NPC');
 
-const { project, fitView, setViewport, getViewport } = useVueFlow();
+const { project, fitView, setViewport, getViewport, zoomIn, zoomOut, onViewportChange } = useVueFlow();
 
 const selectedNode = computed(() => nodes.value.find((node) => node.id === selectedNodeId.value) || null);
 const selectedEdge = computed(() => edges.value.find((edge) => edge.id === selectedEdgeId.value) || null);
@@ -184,8 +265,18 @@ const notificationsTimers = new Map();
 
 let hydrating = false;
 
+const hasSelection = computed(() => Boolean(selectedNode.value || selectedEdge.value));
+const zoomLabel = computed(() => `${zoomLevel.value}%`);
+
 onMounted(async () => {
   window.addEventListener('keydown', handleShortcuts);
+  if (typeof onViewportChange === 'function') {
+    stopViewportListener = onViewportChange(({ zoom }) => {
+      if (typeof zoom === 'number' && Number.isFinite(zoom)) {
+        zoomLevel.value = Math.round(zoom * 100);
+      }
+    });
+  }
     await loadGraph();
 });
 
@@ -193,6 +284,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleShortcuts);
   notificationsTimers.forEach((timer) => clearTimeout(timer));
   notificationsTimers.clear();
+  if (typeof stopViewportListener === 'function') {
+    stopViewportListener();
+    stopViewportListener = null;
+  }
 });
 
 watch(
@@ -374,6 +469,18 @@ function handleConnect(connection) {
   selectedEdgeId.value = edge.id;
 }
 
+function handleZoomIn() {
+  if (typeof zoomIn === 'function') {
+    zoomIn();
+  }
+}
+
+function handleZoomOut() {
+  if (typeof zoomOut === 'function') {
+    zoomOut();
+  }
+}
+
 function deleteNode(node) {
   const nodeId = typeof node === 'string' ? node : node?.id;
   if (!nodeId) return;
@@ -528,7 +635,9 @@ function handlePaneReady() {
 
 async function nextTickFitView() {
   await new Promise((resolve) => setTimeout(resolve, 50));
-  fitToView();
+  if (nodes.value.length && typeof fitView === 'function') {
+    fitToView();
+  }
 }
 
 function handleShortcuts(event) {
@@ -582,32 +691,68 @@ function generateEdgeId() {
 
 <style scoped>
 .flow-shell {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 280px minmax(0, 1fr) 340px;
   gap: 0;
-  height: 680px;
-  border-radius: 18px;
+  width: 100%;
+  border-radius: 20px;
   overflow: hidden;
   border: 1px solid rgba(102, 126, 234, 0.25);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 24px 60px rgba(45, 65, 132, 0.2);
+  background: rgba(249, 250, 255, 0.96);
+  box-shadow: 0 28px 64px rgba(45, 65, 132, 0.18);
+  min-height: 680px;
+}
+
+.flow-shell__palette {
+  position: relative;
+  border-right: 1px solid rgba(102, 126, 234, 0.12);
+}
+
+.flow-shell__properties {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(248, 249, 255, 0.92), rgba(243, 245, 255, 0.88));
+  border-left: 1px solid rgba(102, 126, 234, 0.12);
+}
+
+.flow-shell__properties-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 32px;
+  color: rgba(31, 42, 86, 0.7);
+  font-size: 14px;
+}
+
+.flow-shell__properties-placeholder h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #28346d;
 }
 
 .flow-main {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(242, 246, 255, 0.95), rgba(235, 239, 255, 0.9));
+  background: linear-gradient(180deg, rgba(242, 246, 255, 0.95), rgba(228, 235, 255, 0.88));
 }
 
 .flow-toolbar {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
-  background: rgba(255, 255, 255, 0.95);
+  padding: 18px 28px;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.16);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
-  gap: 18px;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .flow-toolbar__left {
@@ -624,14 +769,35 @@ function generateEdgeId() {
 }
 
 .flow-toolbar__subtitle {
-  font-size: 13px;
-  color: rgba(40, 52, 109, 0.6);
+  font-size: 14px;
+  color: rgba(40, 52, 109, 0.65);
 }
 
 .flow-toolbar__center {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  justify-self: center;
+}
+
+.flow-toolbar__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(102, 126, 234, 0.12);
+  border: 1px solid rgba(102, 126, 234, 0.18);
+}
+
+.flow-toolbar__zoom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #404b8c;
 }
 
 .flow-toolbar__actions {
@@ -643,18 +809,18 @@ function generateEdgeId() {
 .flow-toolbar__btn {
   padding: 8px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(102, 126, 234, 0.35);
-  background: rgba(255, 255, 255, 0.8);
-  color: #404b8c;
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  background: rgba(255, 255, 255, 0.88);
+  color: #3a478d;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .flow-toolbar__btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 10px 24px rgba(102, 126, 234, 0.25);
 }
 
 .flow-toolbar__btn--primary {
@@ -670,6 +836,16 @@ function generateEdgeId() {
   box-shadow: none;
 }
 
+.flow-toolbar__btn--ghost {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(102, 126, 234, 0.15);
+  color: #404b8c;
+}
+
+.flow-toolbar__btn--ghost:hover {
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
 .flow-toolbar__status {
   font-size: 12px;
   color: rgba(40, 52, 109, 0.6);
@@ -683,11 +859,13 @@ function generateEdgeId() {
 .flow-canvas {
   position: relative;
   flex: 1;
+  overflow: hidden;
 }
 
 .flow-canvas__inner {
   width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, rgba(236, 240, 255, 0.75), rgba(225, 229, 255, 0.9));
 }
 
 .flow-overlay {
@@ -710,6 +888,109 @@ function generateEdgeId() {
   border: 4px solid rgba(102, 126, 234, 0.2);
   border-top-color: #667eea;
   animation: spin 1s linear infinite;
+}
+
+.flow-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: rgba(31, 42, 86, 0.75);
+  text-align: center;
+  pointer-events: none;
+}
+
+.flow-empty h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #28346d;
+}
+
+.flow-empty p {
+  margin: 0;
+  font-size: 14px;
+  max-width: 320px;
+}
+
+.flow-empty__actions {
+  display: flex;
+  gap: 12px;
+  pointer-events: all;
+}
+
+.flow-empty__cta {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #7f9cf5);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 16px 30px rgba(102, 126, 234, 0.32);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flow-empty__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(102, 126, 234, 0.35);
+}
+
+.flow-empty__cta--ghost {
+  background: rgba(255, 255, 255, 0.85);
+  color: #404b8c;
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  box-shadow: none;
+}
+
+.flow-empty__cta--ghost:hover {
+  box-shadow: 0 10px 18px rgba(102, 126, 234, 0.25);
+}
+
+.flow-hud {
+  position: absolute;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  gap: 10px;
+  pointer-events: all;
+}
+
+.flow-hud__btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(33, 43, 95, 0.85);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 24px rgba(17, 23, 48, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.flow-hud__btn:hover {
+  background: rgba(33, 43, 95, 0.95);
+  transform: translateY(-2px);
+}
+
+.flow-controls {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 28px rgba(45, 65, 132, 0.2);
+}
+
+.flow-minimap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .flow-toast-list {
@@ -763,6 +1044,22 @@ function generateEdgeId() {
 .toast-leave-to {
   opacity: 0;
   transform: translateY(12px);
+}
+
+@media (max-width: 1460px) {
+  .flow-shell {
+    grid-template-columns: 260px minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .flow-shell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .flow-shell__properties {
+    display: none;
+  }
 }
 
 @keyframes spin {

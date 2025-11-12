@@ -259,6 +259,7 @@ function handleDelete() {
   display: flex;
   flex-direction: column;
   width: 320px;
+  height: 100%;
   min-width: 300px;
   max-width: 360px;
   background: #fdfdff;

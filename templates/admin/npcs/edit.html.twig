@@ -3,16 +3,22 @@
 {% block title %}Edit {{ npc.name }} - {{ parent() }}{% endblock %}
 
 {% block body %}
-<div style="margin-bottom: 20px;">
-    <a href="{{ path('admin_npcs_list') }}" style="color: #667eea; text-decoration: none;">← Back to NPCs</a>
-</div>
+<section class="editor-page">
+    <header class="editor-page__header">
+        <a class="editor-page__back" href="{{ path('admin_npcs_list') }}">← Назад к NPC</a>
+        <div class="editor-page__meta">
+            <h2 class="editor-page__title">Редактор NPC</h2>
+            <p class="editor-page__subtitle">{{ npc.name }}</p>
+            {% if npc.description %}
+                <p class="editor-page__description">{{ npc.description }}</p>
+            {% endif %}
+        </div>
+    </header>
 
-<h2>Edit NPC: {{ npc.name }}</h2>
-<p style="color: #666; margin: 10px 0;">{{ npc.description }}</p>
-
-<div id="dialog-editor" style="margin-top: 30px;">
-    <!-- Vue app will be mounted here -->
-</div>
+    <div id="dialog-editor" class="editor-page__workspace">
+        <!-- Vue app will be mounted here -->
+    </div>
+</section>
 
 <script>
     window.npcData = {
