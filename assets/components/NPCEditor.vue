@@ -866,4 +866,26 @@ function generateEdgeId() {
     transform: rotate(360deg);
   }
 }
+
+/* Стили для лейблов на связях */
+:deep(.vue-flow__edge-text) {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:deep(.vue-flow__edge-textbg) {
+  fill: rgba(255, 255, 255, 0.95);
+}
+
+:deep(.vue-flow__edge-label) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 255, 0.95));
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 65, 132, 0.15), 0 2px 4px rgba(102, 126, 234, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+  color: #404b8c;
+  backdrop-filter: blur(8px);
+}
 </style>
